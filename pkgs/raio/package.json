@@ -1,0 +1,36 @@
+{
+  "name": "raio",
+  "version": "1.0.0",
+  "author": "Duke",
+  "license": "MIT",
+  "dependencies": {
+    "@types/glob": "^8.0.0",
+    "command-line-args": "^5.2.1",
+    "command-line-usage": "^6.1.3",
+    "esbuild": "^0.15.12",
+    "esbuild-register": "^3.3.3",
+    "glob": "^8.0.3",
+    "radix3": "^0.2.1",
+    "tsx": "^3.11.0",
+    "typescript": "^4.8.4",
+    "xstate": "^4.33.6",
+    "zod": "^3.19.1"
+  },
+  "devDependencies": {
+    "@silenteer/run": "^1.0.5",
+    "@types/command-line-args": "^5.2.0",
+    "@types/command-line-usage": "^5.0.2",
+    "@types/node": "^18.11.7",
+    "pkgroll": "^1.4.0",
+    "tsx": "^3.11.0",
+    "vitest": "^0.24.3"
+  },
+  "main": "./dist/server.js",
+  "module": "./dist/server.mjs",
+  "types": "./dist/types.d.ts",
+  "bin": "./dist/cli.js",
+  "scripts": {
+    "build": "pkgroll",
+    "dev": "pkgroll -w"
+  }
+}
