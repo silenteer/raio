@@ -220,22 +220,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@silenteer/run@npm:^1.0.5":
-  version: 1.0.5
-  resolution: "@silenteer/run@npm:1.0.5"
-  dependencies:
-    command-line-args: ^5.2.1
-    command-line-usage: ^6.1.3
-    esbuild: ^0.15.12
-    esbuild-register: ^3.3.3
-    kleur: ^4.1.5
-    lodash: ^4.17.21
-  bin:
-    rr: bin/index.js
-  checksum: 15c57b9737beb932a3c677a3fde5db69665c07177f12ad8bf79f7211ffdac2a6f6d30a8276dca480261b55dff079ea62dc3332df53aa91640fae3e079b85d657
-  languageName: node
-  linkType: hard
-
 "@tootallnate/once@npm:2":
   version: 2.0.0
   resolution: "@tootallnate/once@npm:2.0.0"
@@ -294,6 +278,22 @@ __metadata:
     "@types/minimatch": "*"
     "@types/node": "*"
   checksum: 1817b05f5a8aed851d102a65b5e926d5c777bef927ea62b36d635860eef5364f2046bb5a692d135b6f2b28f34e4a9d44ade9396122c0845bcc7636d35f624747
+  languageName: node
+  linkType: hard
+
+"@types/lodash.merge@npm:^4.6.7":
+  version: 4.6.7
+  resolution: "@types/lodash.merge@npm:4.6.7"
+  dependencies:
+    "@types/lodash": "*"
+  checksum: 94cd6fb8e606756a28f45d63c658aacfbce11a151f7fa322c4a3e87aa50d8bf26e0ae8cba0250070a7c5a6792fc51f79abf4c648bbb1850692be386cd76cd0ca
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:*":
+  version: 4.14.187
+  resolution: "@types/lodash@npm:4.14.187"
+  checksum: 5f8a4fe6d8a6785b8ecbd9efdc8b7d3341b873f63c5390ad0f269a517508e92c1b1d7d43e97bdfb6bba5bba9a8501b30a54f791ef4c30b854382745c75c607d4
   languageName: node
   linkType: hard
 
@@ -501,14 +501,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"basic@workspace:examples/basic":
+"basic@workspace:examples/component":
   version: 0.0.0-use.local
-  resolution: "basic@workspace:examples/basic"
+  resolution: "basic@workspace:examples/component"
   dependencies:
     fastify: ^4.9.2
     nats: ^2.8.0
     raio: "*"
     tsx: ^3.11.0
+    typescript: beta
     zod: ^3.19.1
   languageName: unknown
   linkType: soft
@@ -1665,13 +1666,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kleur@npm:^4.1.5":
-  version: 4.1.5
-  resolution: "kleur@npm:4.1.5"
-  checksum: 1dc476e32741acf0b1b5b0627ffd0d722e342c1b0da14de3e8ae97821327ca08f9fb944542fb3c126d90ac5f27f9d804edbe7c585bf7d12ef495d115e0f22c12
-  languageName: node
-  linkType: hard
-
 "light-my-request@npm:^5.6.1":
   version: 5.6.1
   resolution: "light-my-request@npm:5.6.1"
@@ -1697,10 +1691,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.17.21":
-  version: 4.17.21
-  resolution: "lodash@npm:4.17.21"
-  checksum: eb835a2e51d381e561e508ce932ea50a8e5a68f4ebdd771ea240d3048244a8d13658acbd502cd4829768c56f2e16bdd4340b9ea141297d472517b83868e677f7
+"lodash.merge@npm:^4.6.2":
+  version: 4.6.2
+  resolution: "lodash.merge@npm:4.6.2"
+  checksum: ad580b4bdbb7ca1f7abf7e1bce63a9a0b98e370cf40194b03380a46b4ed799c9573029599caebc1b14e3f24b111aef72b96674a56cfa105e0f5ac70546cdc005
   languageName: node
   linkType: hard
 
@@ -2037,7 +2031,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pino@npm:^8.5.0":
+"pino@npm:^8.5.0, pino@npm:^8.7.0":
   version: 8.7.0
   resolution: "pino@npm:8.7.0"
   dependencies:
@@ -2093,6 +2087,19 @@ __metadata:
   checksum: 9349fd99849b2e3d2e134ff949b7770ecb12375f352723ce2bcc06167eba3850ea7844c1b191a85cd915d6a396b4e8ee9a5267e6cc5d8d003d0cbc7a97555d39
   languageName: node
   linkType: hard
+
+"preset@workspace:examples/preset":
+  version: 0.0.0-use.local
+  resolution: "preset@workspace:examples/preset"
+  dependencies:
+    fastify: ^4.9.2
+    nats: ^2.8.0
+    raio: "*"
+    raio.fastify: "workspace:^"
+    tsx: ^3.11.0
+    zod: ^3.19.1
+  languageName: unknown
+  linkType: soft
 
 "process-warning@npm:^2.0.0":
   version: 2.0.0
@@ -2156,26 +2163,37 @@ __metadata:
   languageName: node
   linkType: hard
 
-"raio@*, raio@workspace:pkgs/raio":
+"raio.fastify@workspace:^, raio.fastify@workspace:presets/fastify":
+  version: 0.0.0-use.local
+  resolution: "raio.fastify@workspace:presets/fastify"
+  dependencies:
+    fastify: ^4.9.2
+    pkgroll: ^1.4.0
+    raio: "workspace:^"
+    zod: ^3.19.1
+  languageName: unknown
+  linkType: soft
+
+"raio@*, raio@workspace:^, raio@workspace:pkgs/raio":
   version: 0.0.0-use.local
   resolution: "raio@workspace:pkgs/raio"
   dependencies:
-    "@silenteer/run": ^1.0.5
     "@types/command-line-args": ^5.2.0
     "@types/command-line-usage": ^5.0.2
     "@types/glob": ^8.0.0
+    "@types/lodash.merge": ^4.6.7
     "@types/node": ^18.11.7
     command-line-args: ^5.2.1
     command-line-usage: ^6.1.3
     esbuild: ^0.15.12
     esbuild-register: ^3.3.3
     glob: ^8.0.3
+    lodash.merge: ^4.6.2
+    pino: ^8.7.0
     pkgroll: ^1.4.0
     radix3: ^0.2.1
-    tsx: ^3.11.0
     typescript: ^4.8.4
     vitest: ^0.24.3
-    xstate: ^4.33.6
     zod: ^3.19.1
   bin:
     raio: ./dist/cli.js
@@ -2308,6 +2326,10 @@ __metadata:
 "root-workspace-0b6124@workspace:.":
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
+  dependencies:
+    nats: ^2.8.0
+    pino: ^8.7.0
+    pkgroll: ^1.4.0
   languageName: unknown
   linkType: soft
 
@@ -2629,6 +2651,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@npm:beta":
+  version: 4.9.1-beta
+  resolution: "typescript@npm:4.9.1-beta"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: db7be9894e8809c3ddea07eb41730c6211929f4f9f388a148354b9ce5f872aea3a86bc20a1cf6277dae7afddc813520e268f5096f6e5befaac705bb8a97d61ea
+  languageName: node
+  linkType: hard
+
 "typescript@patch:typescript@^4.8.4#~builtin<compat/typescript>":
   version: 4.8.4
   resolution: "typescript@patch:typescript@npm%3A4.8.4#~builtin<compat/typescript>::version=4.8.4&hash=701156"
@@ -2636,6 +2668,16 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 301459fc3eb3b1a38fe91bf96d98eb55da88a9cb17b4ef80b4d105d620f4d547ba776cc27b44cc2ef58b66eda23fe0a74142feb5e79a6fb99f54fc018a696afa
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@beta#~builtin<compat/typescript>":
+  version: 4.9.1-beta
+  resolution: "typescript@patch:typescript@npm%3A4.9.1-beta#~builtin<compat/typescript>::version=4.9.1-beta&hash=701156"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 2aa62468590ede8380736c1e23c35073195d30523bd0f39e527252f080057f18706bb9f2aef55d32909633db81845137ce8b634ba1887b4ed33ff2e6cdbc063f
   languageName: node
   linkType: hard
 
@@ -2801,13 +2843,6 @@ __metadata:
   version: 1.0.2
   resolution: "wrappy@npm:1.0.2"
   checksum: 159da4805f7e84a3d003d8841557196034155008f817172d4e986bd591f74aa82aa7db55929a54222309e01079a65a92a9e6414da5a6aa4b01ee44a511ac3ee5
-  languageName: node
-  linkType: hard
-
-"xstate@npm:^4.33.6":
-  version: 4.33.6
-  resolution: "xstate@npm:4.33.6"
-  checksum: 19fc3038ce116e4e0bf36ee7ba7a198b7fae7fad323d8c6966610cbb0c7414f41d3d2d5768e281edf25b8afa903d9bfb55ab053f627ddd83cf042879c2158ec5
   languageName: node
   linkType: hard
 

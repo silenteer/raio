@@ -1,5 +1,6 @@
+import type { PromiseFn, Fn, HandlerFn } from "raio"
 import type { Config } from "./config"
-import type { PromiseFn } from "raio"
+import { z } from "zod"
 
 async function log(context: Record<string, any>) {
   console.log('logging', { context })
@@ -15,11 +16,14 @@ async function serialize(context: Record<string, any>) {
   context.output = output
 }
 
-async function handler(
-  config: Config, 
-  handle: (data: Record<string, any>) => Promise<void>
-): Promise<PromiseFn[]> {
-  return [ log, handle, log ]
-}
+const handlerSchema = z.object({
+  handle: z.function()
+})
 
-export { handler }
+export async function handler(
+  config: Config, 
+  mod: any
+) {
+  const handler = handlerSchema.parse(mod)
+  return [ log, handler.handle, log ]
+}

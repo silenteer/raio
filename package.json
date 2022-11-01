@@ -2,6 +2,12 @@
   "packageManager": "yarn@3.2.4",
   "workspaces": [
     "pkgs/*",
+    "presets/*",
     "examples/*"
-  ]
+  ],
+  "dependencies": {
+    "nats": "^2.8.0",
+    "pino": "^8.7.0",
+    "pkgroll": "^1.4.0"
+  }
 }

@@ -1,0 +1,12 @@
+{
+  "name": "raio.fastify",
+  "packageManager": "yarn@3.2.4",
+  "dependencies": {
+    "fastify": "^4.9.2",
+    "pkgroll": "^1.4.0",
+    "raio": "workspace:^",
+    "zod": "^3.19.1"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts"
+}

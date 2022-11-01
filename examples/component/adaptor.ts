@@ -2,7 +2,7 @@ import { Router } from "raio";
 import { Config } from "./config";
 
 import fastify from "fastify"
-import { connect, JSONCodec } from "nats"
+import { connect, JSONCodec, MsgHdrsImpl } from "nats"
 
 async function fastifyAdaptor(config: Config, router: Router) {
   const server = fastify({ logger: true })
@@ -13,12 +13,15 @@ async function fastifyAdaptor(config: Config, router: Router) {
 
     if (router.has(url)) {
       const data = {
-        headers: req.headers,
+        headers: req.headers as any,
         body: Object.assign({}, req.params, req.body, req.query),
         req, rep
       }
 
-      const result = await router.call(url, data)
+      const result = await router.call(url, {
+        input: data,
+        output: { headers: {}, body: undefined }
+      })
         .catch(error => { throw error })
       console.log({result})
       return rep.send(result?.['output']?.['body'])
@@ -42,15 +45,19 @@ async function natsAdaptor(config: Config, server: Router) {
       const { subject, data } = msg
 
       if (server.has(subject)) {
+        const input = {
+          headers: msg.headers ? (msg.headers as MsgHdrsImpl).toRecord() as any : undefined,
+          body: data.length > 0 ? decode(data) : undefined
+        }
+
         const result = await server.call(subject, {
-          headers: msg.headers,
-          body: data.length > 0 ? decode(data) : undefined,
-          msg
+          input,
+          output: { headers: {}, body: undefined }
         })
 
         if (msg.reply) {
-          if (result?.['output']?.body) {
-            msg.respond(encode(result?.output?.body))
+          if (result['output'].body) {
+            msg.respond(encode(result.output.body))
           }
           else msg.respond()
         } 

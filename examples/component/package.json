@@ -1,0 +1,14 @@
+{
+  "name": "basic",
+  "packageManager": "yarn@3.2.4",
+  "dependencies": {
+    "fastify": "^4.9.2",
+    "nats": "^2.8.0",
+    "raio": "*",
+    "tsx": "^3.11.0",
+    "zod": "^3.19.1"
+  },
+  "devDependencies": {
+    "typescript": "beta"
+  }
+}

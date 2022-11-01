@@ -1,8 +1,7 @@
 import commandLineArgs from 'command-line-args'
 import commandLineUsage, { OptionDefinition } from 'command-line-usage'
+import 'esbuild-register'
 import { createServer } from './server'
-
-import'esbuild-register'
 
 const optionDefinitions: OptionDefinition[] = [
 	{
@@ -34,9 +33,9 @@ const optionDefinitions: OptionDefinition[] = [
 		defaultValue: true
 	},
 	{
-		name: 'aio',
+		name: 'preset',
 		type: String,
-		alias: 'a',
+		alias: 'p',
 		description: 'use one file to config instead of dir based config with `config`, `context` and `handler`. Point this to a file with all of needed export'
 	}
 ]
@@ -56,6 +55,6 @@ if (options.help) {
 	console.log(usage)
 } else {
 	; (async () => {
-		await createServer({ cwd: options.cwd as any, routeDirs: options.dir[0] })
+		await createServer({ cwd: options.cwd as any, routeDirs: options.dir[0], preset: options.preset ? [options.preset] : [] })
 	})()
 }
