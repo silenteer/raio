@@ -5,7 +5,7 @@ import { z } from "zod"
 import pino from "pino"
 import { inspect } from "util"
 
-import type { CallData } from "./types"
+import type { CallData } from "."
 
 type ServerConfig = {
   cwd: string

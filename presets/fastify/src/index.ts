@@ -1,19 +1,18 @@
-import { z } from "zod" 
+import { z } from "zod"
 import fastify from "fastify"
-import type { Router, CallData } from "raio"
+import { CallData, define, inferDefine } from "raio"
 
-export async function config() {
-  
+export const config = define.config(() => {
   const schema = z.object({
     port: z.number().default(3000)
-   })
-   
+  })
+
   return schema.parse({})
-}
+})
 
-export type FastifyConfig = Awaited<ReturnType<typeof config>>
+export type RaioFastifyConfig = inferDefine<typeof config>
 
-export async function adaptor(config: FastifyConfig, router: Router) {
+export const adaptor = define.adaptor(async (config: RaioFastifyConfig, router) => {
   const server = fastify({ logger: true })
 
   server.get('/*', async (req, rep) => {
@@ -28,7 +27,7 @@ export async function adaptor(config: FastifyConfig, router: Router) {
         } as any,
         output: { headers: {}, body: undefined },
         error: undefined
-    }
+      }
 
       const result = await router.call(url, data)
 
@@ -44,4 +43,4 @@ export async function adaptor(config: FastifyConfig, router: Router) {
   server.listen({
     port: config.port
   })
-}
+})

@@ -1,12 +1,12 @@
 import type { Config } from "./config"
+import { type CallData, type inferDefine, define } from "raio"
 
-export async function context(config: Config) {
-  return {}
-}
+export const context = define.context(() => ({}))
 
-export type Context = Awaited<ReturnType<typeof context>>
+export type Context = inferDefine<typeof context>
 
-export async function requestContext(data: any, config: Config, context: Context) {
+export const requestContext = define.requestContext(
+  async (data: CallData, config: Config, context: Context) => {
   return {
     ...context,
     input: {},
@@ -14,6 +14,6 @@ export async function requestContext(data: any, config: Config, context: Context
     data,
     config
   }
-}
+})
 
-export type RequestContext = Awaited<ReturnType<typeof requestContext>>
+export type RequestContext = inferDefine<typeof requestContext>

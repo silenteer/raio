@@ -4,8 +4,8 @@
   "dependencies": {
     "fastify": "^4.9.2",
     "nats": "^2.8.0",
-    "raio": "*",
-    "raio.fastify": "*",
+    "raio": "workspace: *",
+    "raio.fastify": "workspace: *",
     "tsx": "^3.11.0",
     "zod": "^3.19.1"
   }

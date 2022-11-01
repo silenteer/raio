@@ -1,0 +1,14 @@
+{
+  "name": "raio.natsu",
+  "packageManager": "yarn@3.2.4",
+  "dependencies": {
+    "@silenteer/natsu": "^1.0.25",
+    "@silenteer/natsu-type": "^0.0.12"
+  },
+  "devDependencies": {
+    "pkgroll": "^1.4.0",
+    "raio": "workspace:^"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts"
+}

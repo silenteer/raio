@@ -220,6 +220,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@silenteer/natsu-type@npm:*, @silenteer/natsu-type@npm:^0.0.12":
+  version: 0.0.12
+  resolution: "@silenteer/natsu-type@npm:0.0.12"
+  checksum: 34cab17cf622b257f354194ffeed5c930063ed57724b2cdaf910e94f2a4b3b5c84d2cb39071107f50cc8e39bbeee2a987aebabcd164287e8bdff77fff523ed6d
+  languageName: node
+  linkType: hard
+
+"@silenteer/natsu@npm:^1.0.25":
+  version: 1.0.25
+  resolution: "@silenteer/natsu@npm:1.0.25"
+  dependencies:
+    "@silenteer/natsu-type": "*"
+    nats: ^2.2.0
+  checksum: 7e08fcc8a74b5c6945f857ca0c6c1c8638e8868137538e5d8629cf11b6f5477487bd372f8960269993433a0680f3fc0c6213fca7322e636fc56cd342688c4c0e
+  languageName: node
+  linkType: hard
+
 "@tootallnate/once@npm:2":
   version: 2.0.0
   resolution: "@tootallnate/once@npm:2.0.0"
@@ -1885,7 +1902,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nats@npm:^2.8.0":
+"nats@npm:^2.2.0, nats@npm:^2.8.0":
   version: 2.8.0
   resolution: "nats@npm:2.8.0"
   dependencies:
@@ -2094,8 +2111,8 @@ __metadata:
   dependencies:
     fastify: ^4.9.2
     nats: ^2.8.0
-    raio: "*"
-    raio.fastify: "workspace:^"
+    raio: "workspace: *"
+    raio.fastify: "workspace: *"
     tsx: ^3.11.0
     zod: ^3.19.1
   languageName: unknown
@@ -2163,7 +2180,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"raio.fastify@workspace:^, raio.fastify@workspace:presets/fastify":
+"raio.fastify@workspace: *, raio.fastify@workspace:presets/fastify":
   version: 0.0.0-use.local
   resolution: "raio.fastify@workspace:presets/fastify"
   dependencies:
@@ -2174,7 +2191,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"raio@*, raio@workspace:^, raio@workspace:pkgs/raio":
+"raio.natsu@workspace:presets/natsu":
+  version: 0.0.0-use.local
+  resolution: "raio.natsu@workspace:presets/natsu"
+  dependencies:
+    "@silenteer/natsu": ^1.0.25
+    "@silenteer/natsu-type": ^0.0.12
+    pkgroll: ^1.4.0
+    raio: "workspace:^"
+  languageName: unknown
+  linkType: soft
+
+"raio@*, raio@workspace: *, raio@workspace:^, raio@workspace:pkgs/raio":
   version: 0.0.0-use.local
   resolution: "raio@workspace:pkgs/raio"
   dependencies:
