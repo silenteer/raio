@@ -60,7 +60,7 @@ export const context = define.context(async (config: NatsuConfig) => {
   }
 
   return {
-    nc, ns, encode, decode
+    nc, natsService: ns, encode, decode, logService
   }
 })
 
@@ -74,14 +74,12 @@ export const requestContext = define.requestContext(
       throw errors.BadRequest('Invalid nats message')
     }
 
-    const natsuContext = {
+    const natsContext = {
       subject: msg.subject,
-      message: msg,
-      natsService: context.ns,
-      logService
+      message: msg
     }
 
-    return natsuContext
+    return natsContext
   })
 
 export type RequestContext = inferDefine<typeof requestContext>
