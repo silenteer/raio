@@ -2,16 +2,10 @@ import path from "path"
 import glob from "glob"
 import { createRouter } from "radix3"
 import { z } from "zod"
-import pino, { P } from "pino"
+import pino from "pino"
 import { inspect } from "util"
 
 import type { CallData, Router } from "."
-
-type ServerConfig = {
-  cwd: string
-  routeDirs: string
-  preset?: string[]
-}
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' })
 
@@ -23,6 +17,13 @@ const presetSchema = z.object({
   handler: z.function().optional(),
   error: z.function().optional()
 })
+
+type ServerConfig = {
+  cwd: string
+  routeDirs: string
+  preset?: string[]
+  presetApp?: z.infer<typeof presetSchema> // mostly for testing purpose
+}
 
 const schemas = {
   adaptor: z.object({ adaptor: z.function() }),
@@ -101,16 +102,13 @@ const definedProps = (obj: any) => Object.fromEntries(
   Object.entries(obj).filter(([k, v]) => v !== undefined)
 );
 
-async function startServer(serverConfig: ServerConfig = {
-  cwd: process.cwd(),
-  routeDirs: './routes',
-  preset: []
-}) {
+async function dynamicLoad(serverConfig: ServerConfig) {
   const { cwd, routeDirs, preset } = serverConfig
-  logger.debug({ cwd, routeDirs, preset }, 'raio config')
+  const dynamicLoadLogger = logger.child({ name: 'dynamicLoad' })
+  dynamicLoadLogger.debug({ cwd, routeDirs, preset }, 'raio config')
   
   async function loadPreset(): Promise<z.infer<typeof presetSchema>> {
-    const presetLogger = logger.child({ presets: serverConfig.preset })
+    const presetLogger = dynamicLoadLogger.child({ presets: serverConfig.preset })
     let mod = {}
     for (const loadingPreset of serverConfig.preset) {
       presetLogger.debug({ cwd, loadingPreset }, 'loading preset', true)
@@ -140,7 +138,21 @@ async function startServer(serverConfig: ServerConfig = {
   const components = await loadComponent()
   
   const nonValidatedApp = {...definedProps(presetApp), ...definedProps(components)}
-  
+
+  return nonValidatedApp
+}
+
+async function startServer(serverConfig: ServerConfig = {
+  cwd: process.cwd(),
+  routeDirs: './routes',
+  preset: []
+}) {
+  const { cwd, routeDirs } = serverConfig
+
+  const nonValidatedApp = serverConfig.presetApp 
+    ? serverConfig.presetApp
+    : await dynamicLoad(serverConfig)
+ 
   const app = presetSchema.parse({
     adaptor: nonValidatedApp.adaptor,
     config: nonValidatedApp.config,
@@ -149,13 +161,6 @@ async function startServer(serverConfig: ServerConfig = {
     handler: nonValidatedApp.handler,
     error: nonValidatedApp.error,
   })
-
-  logger.debug({ 
-    app: inspect(app),
-    nonValidatedApp: inspect(nonValidatedApp), 
-    presetApp: inspect(definedProps(presetApp)), 
-    components: inspect(definedProps(components)) 
-  }, 'merged app')
 
   const resolvedConfig = await app.config?.() || {}
   logger.debug({ resolvedConfig })
