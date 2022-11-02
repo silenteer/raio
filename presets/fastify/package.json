@@ -5,9 +5,13 @@
   "dependencies": {
     "fastify": "^4.9.2",
     "pkgroll": "^1.4.0",
-    "raio": "workspace:^",
+    "raio": "*",
     "zod": "^3.19.1"
   },
   "main": "dist/index.js",
-  "types": "dist/index.d.ts"
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "pkgroll",
+    "build:raio.fastify": "yarn build"
+  }
 }

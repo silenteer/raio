@@ -2224,7 +2224,7 @@ __metadata:
   dependencies:
     fastify: ^4.9.2
     pkgroll: ^1.4.0
-    raio: "workspace:^"
+    raio: "*"
     zod: ^3.19.1
   languageName: unknown
   linkType: soft
@@ -2237,7 +2237,7 @@ __metadata:
     "@silenteer/natsu-type": ^0.0.12
     nats: ^2.8.0
     pkgroll: ^1.4.0
-    raio: "workspace:^"
+    raio: "*"
   languageName: unknown
   linkType: soft
 

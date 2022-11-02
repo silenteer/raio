@@ -6,7 +6,7 @@
     "@silenteer/natsu": "^1.0.25",
     "@silenteer/natsu-type": "^0.0.12",
     "nats": "^2.8.0",
-    "raio": "workspace:^"
+    "raio": "*"
   },
   "scripts": {
     "build:raio.natsu": "yarn build",
