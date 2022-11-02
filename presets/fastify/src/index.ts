@@ -20,13 +20,9 @@ export const adaptor = define.adaptor(async (config: RaioFastifyConfig, router) 
     req.log.info({ url })
 
     if (router.has(url)) {
-      const data: CallData = {
-        input: {
-          headers: req.headers,
-          body: Object.assign({}, req.params, req.query, req.body)
-        } as any,
-        output: { headers: {}, body: undefined },
-        error: undefined
+      const data: CallData['input'] = {
+        headers: req.headers as any,
+        body: Object.assign({}, req.params, req.query, req.body)
       }
 
       const result = await router.call(url, data)

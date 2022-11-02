@@ -2,10 +2,10 @@ import path from "path"
 import glob from "glob"
 import { createRouter } from "radix3"
 import { z } from "zod"
-import pino from "pino"
+import pino, { P } from "pino"
 import { inspect } from "util"
 
-import type { CallData } from "."
+import type { CallData, Router } from "."
 
 type ServerConfig = {
   cwd: string
@@ -101,7 +101,7 @@ const definedProps = (obj: any) => Object.fromEntries(
   Object.entries(obj).filter(([k, v]) => v !== undefined)
 );
 
-async function createServer(serverConfig: ServerConfig = {
+async function startServer(serverConfig: ServerConfig = {
   cwd: process.cwd(),
   routeDirs: './routes',
   preset: []
@@ -161,6 +161,7 @@ async function createServer(serverConfig: ServerConfig = {
   logger.debug({ resolvedConfig })
 
   const resolvedContext = await app.context?.(resolvedConfig) || {}
+  const context = Object.assign({}, resolvedContext, { config: resolvedConfig })
 
   const router = createRouter()
 
@@ -170,43 +171,56 @@ async function createServer(serverConfig: ServerConfig = {
 
   logger.debug({ routes: maybeRoutes }, 'found files')
 
+  const routes: string[] = [] // because router doesn't provide way to get all routes
+
   for (const maybeRoute of maybeRoutes) {
     const routeLogger = logger.child({ route: maybeRoute, cwd, routeDirs })
     const mod = await import(path.resolve(maybeRouteDir, maybeRoute))
 
     const resolvedFns = await app.handler(resolvedConfig, mod) as Array<any>
 
-    const caller = async (data: CallData) => {
-      const requestContext = await app.requestContext?.(data, resolvedConfig, resolvedContext) as {} || {}
-      const callingData = Object.assign(data, { ...requestContext, config: resolvedConfig})
+    const caller = async (data: CallData['input']) => {
+      const callData: CallData = {
+        config: resolvedConfig,
+        context: { ...context }, // otherwise it'll modify the shared context
+        input: data,
+        output: { headers: {}, body: undefined }
+      }
+
+      const requestContext = await app.requestContext?.(callData, resolvedConfig, context) as {} || {}
+      
+      callData.context = { ...callData.context, ...definedProps(requestContext) }
+
       const callLogger = routeLogger.child({ data })
 
       for await (const resolvedFn of resolvedFns) {
         callLogger.debug('before calling')
-        await resolvedFn(callingData)
+        await resolvedFn(callData)
         callLogger.debug('after calling')
       }
 
-      return callingData
+      return callData
     }
 
     const routePath = path.basename(maybeRoute, path.extname(maybeRoute))
+    routes.push(routePath)
 
     logger.info({ route: routePath }, 'registering route to router')
     router.insert(routePath, { caller })
   }
 
-  async function call(route: string, data: CallData) {
-    const { caller } = router.lookup(route) as any
-    return caller(data)
-  }
-
-  function has(route: string) {
-    return router.lookup(route)
+  const adaptorRouter: Router = {
+    call: async (route, input) => {
+      const { caller } = router.lookup(route) as any
+      return caller(input)
+    },
+    has: (route: string) => {
+      return !!router.lookup(route)
+    }
   }
 
   logger.info("Triggering adaptors")
-  await app.adaptor(resolvedConfig, resolvedContext, { call, has })
+  await app.adaptor(resolvedConfig, context, adaptorRouter)
 }
 
-export { createServer }
+export { startServer }

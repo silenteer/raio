@@ -1,7 +1,7 @@
 import commandLineArgs from 'command-line-args'
 import commandLineUsage, { OptionDefinition } from 'command-line-usage'
 import 'esbuild-register'
-import { createServer } from './server'
+import { startServer } from './server'
 
 const optionDefinitions: OptionDefinition[] = [
 	{
@@ -55,6 +55,6 @@ if (options.help) {
 	console.log(usage)
 } else {
 	; (async () => {
-		await createServer({ cwd: options.cwd as any, routeDirs: options.dir[0], preset: options.preset ? [options.preset] : [] })
+		await startServer({ cwd: options.cwd as any, routeDirs: options.dir[0], preset: options.preset ? [options.preset] : [] })
 	})()
 }

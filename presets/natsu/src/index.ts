@@ -1,9 +1,9 @@
-import { NatsHandle, NatsHandler, NatsInjection } from "@silenteer/natsu"
+import { NatsHandler, NatsInjection } from "@silenteer/natsu"
 import { NatsService } from "@silenteer/natsu-type"
 import { connect, JSONCodec, MsgHdrsImpl } from "nats"
 import { MsgImpl } from "nats/lib/nats-base-client/msg"
 import { decode, encode } from "nats/lib/nats-base-client/encoders"
-import { define, inferDefine, errors } from "raio"
+import { define, inferDefine, errors, CallData } from "raio"
 import { z } from "zod"
 
 type AnyService = NatsService<string, any, any>
@@ -123,33 +123,25 @@ export const adaptor = define.adaptor(async (config: NatsuConfig, context: Natsu
 
   nc.subscribe('>', {
     callback(err, msg) {
-      if (err) { console.log(err)}
+      if (err) { console.log(err) }
       else if (msg) {
         const subject = msg.subject
 
         if (!router.has(subject)) return
 
         router.call(subject, {
-            context,
-            input: {
-              headers: msg.headers ? (msg.headers as MsgHdrsImpl).toRecord() as any : {},
-              body: msg.data.length > 0 ? decode(msg.data) : undefined,
-              msg
-            } as any,
-            output: {
-              headers: {},
-              body: undefined
-            }
-          })
-          .then(result => {
-            if (!msg.reply) return
+          headers: msg.headers ? (msg.headers as MsgHdrsImpl).toRecord() as any : {},
+          body: msg.data.length > 0 ? decode(msg.data) : undefined,
+          msg
+        } as CallData['input'])
+        .then(result => {
+          if (!msg.reply) return
 
-            const headers = MsgHdrsImpl.fromRecord(result.output.headers as any)
-            const body = result.output.body ? encode(JSON.stringify(result.output.body)) : undefined
-            console.log(result, body)
-            msg.respond(body, { headers })
-          })
-          .catch(console.error)
+          const headers = MsgHdrsImpl.fromRecord(result.output.headers as any)
+          const body = result.output.body ? encode(JSON.stringify(result.output.body)) : undefined
+          msg.respond(body, { headers })
+        })
+        .catch(console.error)
       }
     }
   })

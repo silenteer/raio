@@ -5,21 +5,23 @@ export type PromiseFn<I = any, T = any> = (input: I) => Promise<T>
 type Dictionary<T extends any = any> = Record<string, T>
 export type CallData = {
   context: Dictionary,
+  config: Dictionary,
   input: { headers: Dictionary<string>, body: any },
   output: { headers: Dictionary<string>, body: any },
   error?: any
 }
 
-export type ConfigFn<T extends Dictionary> = (config: any) => Promise<T> | T
-export type ContextFn<T extends Dictionary, C extends Dictionary = Dictionary> = (config: C) => Promise<T> | T
+export type ConfigFn<T extends Dictionary> = (config?: Dictionary) => Promise<T> | T
+export type ContextFn<T extends Dictionary, C extends Dictionary = Dictionary> = (config: C, context: Dictionary) => Promise<T> | T
+
 export type RequestContextFn<
   T extends Dictionary,
   Context extends Dictionary,
   Config extends Dictionary
-> = (data: CallData, config: Context, context: Config) => Promise<T> | T
+> = (data: CallData, context: Context, config: Config) => Promise<T> | T
 
 export type HandleFn = (data: CallData) => Promise<void>
-export type HandlerFn = (config: CallData, mod: any) => Promise<HandleFn[]> | HandleFn[]
+export type HandlerFn = (data: CallData, mod: any) => Promise<HandleFn[]> | HandleFn[]
 
 export type AdaptorFn<
   Config extends Dictionary, 
@@ -28,7 +30,7 @@ export type AdaptorFn<
 export type ErrorFn = (error: any, data: CallData) => Promise<void>
 
 export type Router = {
-  call: (path: string, data: CallData) => Promise<CallData>,
+  call: (path: string, data: CallData['input']) => Promise<CallData>,
   has: Fn<any, boolean>
 }
 

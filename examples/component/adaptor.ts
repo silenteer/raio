@@ -1,10 +1,10 @@
-import { Router } from "raio";
+import { define, Router } from "raio";
 import { Config } from "./config";
 
 import fastify from "fastify"
 import { connect, JSONCodec, MsgHdrsImpl } from "nats"
 
-async function fastifyAdaptor(config: Config, router: Router) {
+const fastifyAdaptor = define.adaptor(async function (config: Config, context, router: Router) {
   const server = fastify({ logger: true })
 
   server.get('/*', async (req, rep) => {
@@ -18,10 +18,7 @@ async function fastifyAdaptor(config: Config, router: Router) {
         req, rep
       }
 
-      const result = await router.call(url, {
-        input: data,
-        output: { headers: {}, body: undefined }
-      })
+      const result = await router.call(url, data)
         .catch(error => { throw error })
       console.log({result})
       return rep.send(result?.['output']?.['body'])
@@ -34,9 +31,9 @@ async function fastifyAdaptor(config: Config, router: Router) {
   server.listen({
     port: config.port
   })
-}
+})
 
-async function natsAdaptor(config: Config, server: Router) {
+const natsAdaptor =  define.adaptor(async (config: Config, context, server: Router) => {
   const nc = await connect()
   const { encode, decode } = JSONCodec()
 
@@ -50,10 +47,7 @@ async function natsAdaptor(config: Config, server: Router) {
           body: data.length > 0 ? decode(data) : undefined
         }
 
-        const result = await server.call(subject, {
-          input,
-          output: { headers: {}, body: undefined }
-        })
+        const result = await server.call(subject, input)
 
         if (msg.reply) {
           if (result['output'].body) {
@@ -64,11 +58,11 @@ async function natsAdaptor(config: Config, server: Router) {
       }
     },
   })
-}
+})
 
-async function adaptor(config: Config, server: Router) {
-  fastifyAdaptor(config, server)
-  natsAdaptor(config, server)
+async function adaptor(config: Config, context, server: Router) {
+  fastifyAdaptor(config, context, server)
+  natsAdaptor(config, context, server)
 }
 
 export { adaptor }
