@@ -18,12 +18,14 @@ const presetSchema = z.object({
   error: z.function().optional()
 })
 
-type ServerConfig = {
-  cwd: string
-  routeDirs: string
-  preset?: string[]
-  presetApp?: z.infer<typeof presetSchema> // mostly for testing purpose
-}
+const serverConfigSchema = z.object({
+  cwd: z.string().default(process.cwd()),
+  routeDirs: z.string().array().default(['./routes']),
+  preset: z.string().array().optional().default([]),
+  presetApp: presetSchema.optional()
+})
+
+type ServerConfig = z.infer<typeof serverConfigSchema>
 
 const schemas = {
   adaptor: z.object({ adaptor: z.function() }),
@@ -142,12 +144,8 @@ async function dynamicLoad(serverConfig: ServerConfig) {
   return nonValidatedApp
 }
 
-async function startServer(serverConfig: ServerConfig = {
-  cwd: process.cwd(),
-  routeDirs: './routes',
-  preset: []
-}) {
-  const { cwd, routeDirs } = serverConfig
+async function startServer(serverConfig: ServerConfig) {
+  const { cwd, routeDirs } = serverConfigSchema.parse(serverConfig)
 
   const nonValidatedApp = serverConfig.presetApp 
     ? serverConfig.presetApp
@@ -170,9 +168,11 @@ async function startServer(serverConfig: ServerConfig = {
 
   const router = createRouter()
 
-  const maybeRouteDir = path.join(cwd, routeDirs)
-
-  const maybeRoutes = glob.sync('*.[j|t]s', { cwd: maybeRouteDir })
+  const maybeRoutes = routeDirs.reduce((routes, nextPath) => { 
+    const searchPath = path.join(cwd, nextPath)
+    const foundFiles = glob.sync('*.[j|t]s', { cwd: searchPath })
+    return [ ...routes, ...foundFiles.map(f => path.join(searchPath, f)) ] 
+  }, [])
 
   logger.debug({ routes: maybeRoutes }, 'found files')
 
@@ -180,7 +180,7 @@ async function startServer(serverConfig: ServerConfig = {
 
   for (const maybeRoute of maybeRoutes) {
     const routeLogger = logger.child({ route: maybeRoute, cwd, routeDirs })
-    const mod = await import(path.resolve(maybeRouteDir, maybeRoute))
+    const mod = await import(path.resolve(maybeRoute, maybeRoute))
 
     const resolvedFns = await app.handler(resolvedConfig, mod) as Array<any>
 

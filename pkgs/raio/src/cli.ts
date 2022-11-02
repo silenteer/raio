@@ -12,7 +12,7 @@ const optionDefinitions: OptionDefinition[] = [
 	},
 	{
 		name: 'dir',
-		defaultOption: true,
+		alias: 'd',
 		multiple: true,
 		type: String,
 		description: 'directory of routes, can specify multiple times. Default is routes',
@@ -55,6 +55,6 @@ if (options.help) {
 	console.log(usage)
 } else {
 	; (async () => {
-		await startServer({ cwd: options.cwd as any, routeDirs: options.dir[0], preset: options.preset ? [options.preset] : [] })
+		await startServer({ cwd: options.cwd as any, routeDirs: options.dir, preset: options.preset ? [options.preset] : [] })
 	})()
 }
