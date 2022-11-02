@@ -1,0 +1,13 @@
+{
+  "name": "natsu",
+  "packageManager": "yarn@3.2.4",
+  "scripts": {
+    "run": "raio -p raio.natsu"
+  },
+  "dependencies": {
+    "@silenteer/natsu": "^1.0.25",
+    "@silenteer/natsu-type": "^0.0.12",
+    "raio": "workspace:^",
+    "raio.natsu": "workspace:^"
+  }
+}

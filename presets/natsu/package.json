@@ -3,7 +3,8 @@
   "packageManager": "yarn@3.2.4",
   "dependencies": {
     "@silenteer/natsu": "^1.0.25",
-    "@silenteer/natsu-type": "^0.0.12"
+    "@silenteer/natsu-type": "^0.0.12",
+    "nats": "^2.8.0"
   },
   "devDependencies": {
     "pkgroll": "^1.4.0",

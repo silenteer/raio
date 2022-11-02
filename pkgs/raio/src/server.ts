@@ -206,7 +206,7 @@ async function createServer(serverConfig: ServerConfig = {
   }
 
   logger.info("Triggering adaptors")
-  await app.adaptor(resolvedConfig, { call, has })
+  await app.adaptor(resolvedConfig, resolvedContext, { call, has })
 }
 
 export { createServer }
