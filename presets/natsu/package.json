@@ -1,7 +1,7 @@
 {
   "name": "raio.natsu",
   "packageManager": "yarn@3.2.4",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "dependencies": {
     "@silenteer/natsu": "^1.0.25",
     "@silenteer/natsu-type": "^0.0.12",

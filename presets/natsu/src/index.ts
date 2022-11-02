@@ -1,4 +1,4 @@
-import { NatsHandler, NatsInjection } from "@silenteer/natsu"
+import { NatsAuthorizationInjection, NatsAuthorize, NatsHandler, NatsInjection, NatsValidate, NatsValidationInjection } from "@silenteer/natsu"
 import { NatsService } from "@silenteer/natsu-type"
 import { connect, JSONCodec, MsgHdrsImpl } from "nats"
 import { MsgImpl } from "nats/lib/nats-base-client/msg"
@@ -7,7 +7,6 @@ import { define, inferDefine, errors, CallData } from "raio"
 import { z } from "zod"
 
 type AnyService = NatsService<string, any, any>
-type AnyHandler = NatsHandler<AnyService>
 type ContextShape = NatsInjection<AnyService>
 
 type LogService = ContextShape['logService']
@@ -67,49 +66,67 @@ export const context = define.context(async (config: NatsuConfig) => {
 export type NatsuContext = inferDefine<typeof context>
 
 export const requestContext = define.requestContext(
-  async (data, config: NatsuConfig, context: NatsuContext): Promise<Omit<ContextShape, 'handler'>> => {
+  async (data, config: NatsuConfig, context: NatsuContext) => {
     const msg = data.input['msg']
 
     if (!(msg instanceof MsgImpl)) {
       throw errors.BadRequest('Invalid nats message')
     }
 
-    const natsContext = {
+    const natsuContext = {
       subject: msg.subject,
       message: msg
     }
 
-    return natsContext
+    return natsuContext
   })
 
-export type RequestContext = inferDefine<typeof requestContext>
+export type NatsuRequestContext = inferDefine<typeof requestContext>
 
-export const natsuValidate = (mod: any) => define.handle(async (data) => {
-  const fn = mod.validate || mod.default?.validate
+export const natsuValidate = (mod: any) => define.handle(async (data: NatsuRequestContext & NatsuContext & CallData) => {
+  const fn = (mod.validate || mod.default?.validate) as NatsValidate<AnyService>
 
-  const result = await fn?.(data.input, data)
-  if (!result) return
+  if (!fn) return
 
-  if (result.code !== 'OK' || result.code !== 200) {
-    throw errors.BadRequest()
+  const natsuContext: NatsValidationInjection<AnyService> = {
+    ...data, 
+    handler: undefined as any,
+    ok() { return { code: 'OK' }},
+    error(params) { throw errors(params?.code || 400, params?.errors) }
   }
+
+  const result = await fn(data.input, natsuContext)
+  if (!['OK', 200].includes(result.code)) natsuContext.error(result as any)
 })
 
-export const natsuAuthorize = (mod: any) => define.handle(async (data) => {
-  const fn = mod.authorize || mod.default?.authorize
-  const result = await fn?.(data.input, data)
-  if (!result) return
+export const natsuAuthorize = (mod: any) => define.handle(async (data: NatsuRequestContext & NatsuContext & CallData) => {
+  const fn = mod.authorize || mod.default?.authorize as NatsAuthorize<AnyService>
+  
+  if (!fn) return
 
-  if (result.code !== 'OK' || result.code !== 200) {
-    throw errors.Unauthorized()
+  const natsuContext: NatsAuthorizationInjection<AnyService> = {
+    ...data, 
+    handler: undefined as any,
+    ok() { return { code: 'OK' }},
+    error(error: { code?: number, errors: unknown }) { throw errors(error?.code || 403, error?.errors) }
   }
+
+  const result = await fn(data.input, natsuContext)
+  if (!['OK', 200].includes(result.code)) natsuContext.error(result)
 })
 
-export const natsuHandle = (mod: any) => define.handle(async (data) => {
+export const natsuHandle = (mod: any) => define.handle(async (data: NatsuRequestContext & NatsuContext & CallData) => {
   const fn = mod.handle || mod.default?.handle
 
-  await fn?.(data.input, data)
-    .then(result => data.output = result)
+  const natsuContext: NatsAuthorizationInjection<AnyService> = {
+    ...data, 
+    handler: undefined as any,
+    ok() { return { code: 'OK' }},
+    error(error: { code?: number, errors: unknown }) { throw errors(error?.code || 403, error?.errors) }
+  }
+
+  const result = await fn(data.input, natsuContext)
+  if (!['OK', 200].includes(result.code)) natsuContext.error(result)
 })
 
 export const handler = define.handler(async (config, mod) => {
