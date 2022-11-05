@@ -1,10 +1,12 @@
 import { define, Router } from "raio";
-import { Config } from "./config";
+import { configSchema } from "./config";
 
 import fastify from "fastify"
 import { connect, JSONCodec, MsgHdrsImpl } from "nats"
 
-const fastifyAdaptor = define.adaptor(async function (config: Config, context, router: Router) {
+const fastifyAdaptor = define.adaptor(async function (config, context, router) {
+  const validatedConfig = configSchema.parse(config)
+
   const server = fastify({ logger: true })
 
   server.get('/*', async (req, rep) => {
@@ -29,11 +31,11 @@ const fastifyAdaptor = define.adaptor(async function (config: Config, context, r
   })
 
   server.listen({
-    port: config.port
+    port: validatedConfig.port
   })
 })
 
-const natsAdaptor =  define.adaptor(async (config: Config, context, server: Router) => {
+const natsAdaptor =  define.adaptor(async (config, context, server: Router) => {
   const nc = await connect()
   const { encode, decode } = JSONCodec()
 
@@ -60,9 +62,10 @@ const natsAdaptor =  define.adaptor(async (config: Config, context, server: Rout
   })
 })
 
-async function adaptor(config: Config, context, server: Router) {
-  fastifyAdaptor(config, context, server)
-  natsAdaptor(config, context, server)
-}
+export const adaptor = define.adaptor(
+  async (config, context, server: Router) => {
+    fastifyAdaptor(config, context, server)
+    natsAdaptor(config, context, server)
 
-export { adaptor }
+  }
+)
