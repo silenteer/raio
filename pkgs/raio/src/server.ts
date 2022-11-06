@@ -1,13 +1,21 @@
 import path from "path"
 import glob from "glob"
-import { createRouter } from "radix3"
+import { createRouter, toRouteMatcher } from "radix3"
 import { z } from "zod"
 import pino from "pino"
 import { inspect } from "util"
+import merge from "lodash.merge"
+import { customAlphabet } from "nanoid"
 
-import type { CallData, Router } from "."
+import type { CallContext, Router, AdaptorFn, ConfigFn, Raio, ContextFn, RequestContextFn, HandlerFn } from "."
 
-const logger = pino({ level: process.env.LOG_LEVEL || 'info' })
+const logLevel = z
+  .enum(['debug', 'info', 'error'])
+  .optional()
+  .default('info')
+  .parse(process.env.LOG_LEVEL)
+  
+const logger = pino({ level: logLevel })
 
 const presetSchema = z.object({
   adaptor: z.function().optional(),
@@ -88,8 +96,6 @@ async function loadModule(
     : loadingModuleFile
 
   const mod = await import(loadingPath)
-  moduleLogger.debug({ mod, s: inspect(mod) }, 'loaded >>>>>>>')
-
   moduleLogger.debug('testing againts zod')
 
   const validatedMod = type === 'preset'
@@ -99,10 +105,6 @@ async function loadModule(
   moduleLogger.info({ test: validatedMod['adaptor'] }, 'loaded successfully')
   return mod
 }
-
-const definedProps = (obj: any) => Object.fromEntries(
-  Object.entries(obj).filter(([k, v]) => v !== undefined)
-);
 
 async function dynamicLoad(serverConfig: ServerConfig) {
   const { cwd, routeDirs, preset } = serverConfig
@@ -128,24 +130,34 @@ async function dynamicLoad(serverConfig: ServerConfig) {
     const adaptorMod = await loadModule(cwd, './adaptor', 'adaptor')
 
     return {
-      config: configMod?.config,
-      adaptor: adaptorMod?.adaptor,
-      context: contextMod?.context,
-      requestContext: contextMod?.requestContext,
-      handler: handlerMod?.handler
+      config: configMod?.config as ConfigFn<any> | undefined,
+      adaptor: adaptorMod?.adaptor as AdaptorFn | undefined,
+      context: contextMod?.context as ContextFn<any> | undefined,
+      requestContext: contextMod?.requestContext as RequestContextFn<any> | undefined,
+      handler: handlerMod?.handler as HandlerFn | undefined
     }
   }
 
   const presetApp = preset ? await loadPreset() : {}
   const components = await loadComponent()
   
-  const nonValidatedApp = {...definedProps(presetApp), ...definedProps(components)}
+  const nonValidatedApp = merge(presetApp, components)
 
   return nonValidatedApp
 }
 
+const nanoid = customAlphabet('abcdefghijklmnopqrstuvxyz', 6)
+
 async function startServer(serverConfig: ServerConfig) {
   const { cwd, routeDirs } = serverConfigSchema.parse(serverConfig)
+
+  let raio: Raio = {
+    config: {},
+    context: {},
+    routes: []
+  }
+
+  const serverLogger = logger.child({ name: 'server' })
 
   const nonValidatedApp = serverConfig.presetApp 
     ? serverConfig.presetApp
@@ -160,11 +172,15 @@ async function startServer(serverConfig: ServerConfig) {
     error: nonValidatedApp.error,
   })
 
-  const resolvedConfig = await app.config?.() || {}
-  logger.debug({ resolvedConfig })
+  const resolvedConfig = await app.config?.(raio) || {}
 
-  const resolvedContext = await app.context?.(resolvedConfig) || {}
-  const context = Object.assign({}, resolvedContext, { config: resolvedConfig })
+  raio = merge(raio, { config: resolvedConfig })
+  serverLogger.debug({ resolvedConfig, raio }, 'config loaded')
+
+  const resolvedContext = await app.context?.(raio) || {}
+  raio = merge(raio, { context: resolvedContext })
+  
+  serverLogger.debug({ resolvedContext, raio }, 'context loaded')
 
   const router = createRouter()
 
@@ -174,58 +190,64 @@ async function startServer(serverConfig: ServerConfig) {
     return [ ...routes, ...foundFiles.map(f => path.join(searchPath, f)) ] 
   }, [])
 
-  logger.debug({ routes: maybeRoutes }, 'found files')
+  serverLogger.debug({ routes: maybeRoutes }, 'found files')
 
   const routes: string[] = [] // because router doesn't provide way to get all routes
 
   for (const maybeRoute of maybeRoutes) {
-    const routeLogger = logger.child({ route: maybeRoute, cwd, routeDirs })
+    const routeLogger = serverLogger.child({ route: maybeRoute, cwd, routeDirs })
     const mod = await import(path.resolve(maybeRoute, maybeRoute))
 
-    const resolvedFns = await app.handler(resolvedConfig, mod) as Array<any>
+    const resolvedFns = await app.handler(raio, mod) as Array<any>
 
-    const caller = async (data: CallData['input']) => {
-      const callData: CallData = {
-        config: resolvedConfig,
-        context: { ...context }, // otherwise it'll modify the shared context
+    const caller = async (data: CallContext['input'], callConfig: Record<string, any>) => {
+      let callContext: CallContext = {
+        id: callConfig?.['id'] || nanoid(),
+        server: raio,
+        config: raio.config,
+        context: merge(raio.context, callConfig),
         input: data,
         output: { headers: {}, body: undefined }
       }
 
-      const requestContext = await app.requestContext?.(callData, resolvedConfig, context) as {} || {}
-      
-      callData.context = { ...callData.context, ...definedProps(requestContext) }
+      const callLogger = routeLogger.child({ name: callContext.id })
+      callLogger.debug('incoming request')
 
-      const callLogger = routeLogger.child({ data })
+      const requestContext = await app.requestContext?.(callContext) as {} || {}
+      callContext = merge(callContext, { context: requestContext })      
+      callLogger.debug({ requestContext }, 'resolved request context')
 
       for await (const resolvedFn of resolvedFns) {
         callLogger.debug('before calling')
-        await resolvedFn(callData)
+        const resolvedCallContext = await resolvedFn(callContext)
+        callContext = merge(callContext, resolvedCallContext)
         callLogger.debug('after calling')
       }
 
-      return callData
+      return callContext
     }
 
     const routePath = path.basename(maybeRoute, path.extname(maybeRoute))
     routes.push(routePath)
 
-    logger.info({ route: routePath }, 'registering route to router')
+    serverLogger.info({ route: routePath }, 'registering route to router')
     router.insert(routePath, { caller })
   }
 
   const adaptorRouter: Router = {
-    call: async (route, input) => {
+    call: async (route, input, callConfig) => {
       const { caller } = router.lookup(route) as any
-      return caller(input)
+      return caller(input, callConfig)
     },
     has: (route: string) => {
       return !!router.lookup(route)
-    }
+    },
   }
 
-  logger.info("Triggering adaptors")
-  await app.adaptor(resolvedConfig, context, adaptorRouter)
+  serverLogger.debug({ routes: router.ctx.staticRoutesMap }, "route table")
+
+  serverLogger.info("Triggering adaptors")
+  await app.adaptor(raio, adaptorRouter)
 }
 
 export { startServer }

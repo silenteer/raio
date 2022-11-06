@@ -1929,6 +1929,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nanoid@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "nanoid@npm:4.0.0"
+  bin:
+    nanoid: bin/nanoid.js
+  checksum: 7d5946df5c6d383694195b781ae7b5067c149d164ec71e910d6b06676309c3459b68af570b944fb5ecd5065d19df464f05700d141d70bb712ff8ca06642fd8df
+  languageName: node
+  linkType: hard
+
 "nats@npm:^2.2.0, nats@npm:^2.8.0":
   version: 2.8.0
   resolution: "nats@npm:2.8.0"
@@ -2258,6 +2267,7 @@ __metadata:
     glob: ^8.0.3
     http-errors: ^2.0.0
     lodash.merge: ^4.6.2
+    nanoid: ^4.0.0
     pino: ^8.7.0
     pkgroll: ^1.4.0
     radix3: ^0.2.1
