@@ -25,6 +25,7 @@
     "@types/lodash.merge": "^4.6.7",
     "@types/node": "^18.11.7",
     "pkgroll": "^1.4.0",
+    "ts-toolbelt": "^9.6.0",
     "vitest": "^0.24.3"
   },
   "bin": "./dist/cli.js",

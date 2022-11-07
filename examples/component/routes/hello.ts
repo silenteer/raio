@@ -1,8 +1,10 @@
-import type { RequestContext } from "../context"
+import { define } from "raio"
 
-async function handle(context: RequestContext) {
-  console.log('hello world')
-  context.output['body'] = { hello: 'world' }
-}
+export const handle = define.handle(async (context) => {
 
-export { handle }
+  return {
+    output: {
+      body: { hello: 'world' }
+    }
+  }
+})

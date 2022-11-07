@@ -1,13 +1,14 @@
-import { NatsAuthorizationInjection, NatsAuthorize, NatsHandler, NatsInjection, NatsValidate, NatsValidationInjection } from "@silenteer/natsu"
+import { NatsAuthorizationInjection, NatsAuthorize, NatsHandler, NatsInjection, NatsValidate, NatsValidationInjection, NatsHandle, NatsHandleInjection } from "@silenteer/natsu"
 import { NatsService } from "@silenteer/natsu-type"
-import { connect, JSONCodec, MsgHdrsImpl } from "nats"
+import { connect, JSONCodec, MsgHdrsImpl, NatsConnection } from "nats"
 import { MsgImpl } from "nats/lib/nats-base-client/msg"
 import { decode, encode } from "nats/lib/nats-base-client/encoders"
-import { define, inferDefine, errors, CallData } from "raio"
+import { logger, define, inferDefine, errors } from "raio"
 import { z } from "zod"
 
+const natsuLogger = logger.child({ name: 'natsu' })
+
 type AnyService = NatsService<string, any, any>
-type ContextShape = NatsInjection<AnyService>
 
 type LogService = ContextShape['logService']
 type NatsUtils = ContextShape['natsService']
@@ -19,29 +20,26 @@ const logService: LogService = {
   warn: console.log
 }
 
-export const config = define.config(() => {
-  const natsConfig = z.object({
-    urls: z
-      .preprocess(value => {
-        if (typeof value === 'string' && value) return value.split(',')
-        else return value
-      }, z.string().array())
-      .default([]),
-    user: z.string().optional(),
-    pass: z.string().optional()
-  })
+const natsuConfigSchema = z.object({
+  urls: z.string().array().optional(),
+  user: z.string().optional(),
+  pass: z.string().optional()
+})
 
-  return natsConfig.parse({
+export const config = define.config(() => {
+  return natsuConfigSchema.parse({
     urls: process.env.NATS_URLS,
     user: process.env.NATS_USER,
     pass: process.env.NATS_PASS
   })
 })
 
-export type NatsuConfig = inferDefine<typeof config>
+export type NatsuConfig = z.infer<typeof natsuConfigSchema>
 
-export const context = define.context(async (config: NatsuConfig) => {
-  const nc = await connect({ servers: config.urls, user: config.user, pass: config.pass })
+export const context = define.context(async (config) => {
+  const natsuConfig = natsuConfigSchema.parse(config)
+  
+  const nc = await connect({ servers: natsuConfig.urls, user: natsuConfig.user, pass: natsuConfig.pass })
   const { encode, decode } = JSONCodec()
   const ns: NatsUtils = {
     async request(subject, data, opts) {
@@ -57,18 +55,59 @@ export const context = define.context(async (config: NatsuConfig) => {
       return nc.subscribe(subject, opts)
     }
   }
-
+  
   return {
     nc, natsService: ns, encode, decode, logService
-  }
+  } as const
 })
+
+const natsServiceSchema = z.object({})
+const logServiceSchema = z.object({
+  log: z.function(),
+  info: z.function(),
+  error: z.function(),
+  warn: z.function()
+})
+
+type y = NatsHandler<AnyService>
+type x = NatsAuthorize<AnyService>
+
+type ContextShape = NatsInjection<AnyService>
+const natsuInjectionSchema = z.object({
+  subject: z.string(),
+  message: z.instanceof(MsgImpl),
+  logService: logServiceSchema,
+  natsService: natsServiceSchema,
+  handler: z.object({})
+})
+
+const natsuRequestSchema = z.object({
+  headers: z.record(z.string()).optional(),
+  body: z.any()
+})
+
+const natsuResponseSchema = natsuRequestSchema
+  .extend({ code: z.literal('OK').or(z.number())})
+
+const natsuFnSchema = z.function()
+  .args(natsuRequestSchema, natsuInjectionSchema)
+  .returns(z.promise(natsuResponseSchema))
+
+const handlerSchema = z.object({
+  subject: z.string(), // name can comes from the file as well
+  validate: natsuFnSchema.optional(),
+  authorize: natsuFnSchema.optional(),
+  handle: natsuFnSchema
+})
+
+type NatsuHandler = z.infer<typeof handlerSchema>
 
 export type NatsuContext = inferDefine<typeof context>
 
 export const requestContext = define.requestContext(
-  async (data, config: NatsuConfig, context: NatsuContext) => {
-    const msg = data.input['msg']
-
+  async (callContext) => {
+    const msg = callContext.context.msg
+    
     if (!(msg instanceof MsgImpl)) {
       throw errors.BadRequest('Invalid nats message')
     }
@@ -83,58 +122,107 @@ export const requestContext = define.requestContext(
 
 export type NatsuRequestContext = inferDefine<typeof requestContext>
 
-export const natsuValidate = (mod: any) => define.handle(async (data: NatsuRequestContext & NatsuContext & CallData) => {
-  const fn = (mod.validate || mod.default?.validate) as NatsValidate<AnyService>
+export const natsuValidate = (mod: NatsuHandler) => define.handle(async data => {
+  if (!mod.validate) return
 
-  if (!fn) return
+  const fn = mod.validate as unknown as NatsValidate<AnyService>
 
   const natsuContext: NatsValidationInjection<AnyService> = {
-    ...data, 
-    handler: undefined as any,
-    ok() { return { code: 'OK' }},
-    error(params) { throw errors(params?.code || 400, params?.errors) }
+    subject: mod.subject,
+    message: data.context.msg as any,
+    natsService: data.context.natsService,
+    logService: data.context.logService,
+    handler: mod as any,
+    ok() { return { code: 'OK' } },
+    error(params) {
+      if (params?.errors instanceof Error) {
+        throw errors(params?.code || 400, params?.errors) 
+      } if (typeof params?.errors === 'string') {
+        throw errors.BadRequest(params.errors)
+      } else {
+        throw errors.BadRequest()
+      }
+    }
   }
 
   const result = await fn(data.input, natsuContext)
   if (!['OK', 200].includes(result.code)) natsuContext.error(result as any)
 })
 
-export const natsuAuthorize = (mod: any) => define.handle(async (data: NatsuRequestContext & NatsuContext & CallData) => {
-  const fn = mod.authorize || mod.default?.authorize as NatsAuthorize<AnyService>
-  
-  if (!fn) return
+export const natsuAuthorize = (mod: NatsuHandler) => define.handle(async data => {
+  if (!mod.authorize) return
+
+  const fn = mod.authorize as unknown as NatsAuthorize<AnyService>
 
   const natsuContext: NatsAuthorizationInjection<AnyService> = {
-    ...data, 
-    handler: undefined as any,
-    ok() { return { code: 'OK' }},
-    error(error: { code?: number, errors: unknown }) { throw errors(error?.code || 403, error?.errors) }
+    subject: mod.subject,
+    message: data.context.msg as any,
+    natsService: data.context.natsService,
+    logService: data.context.logService,
+    handler: mod as any,
+    ok() { return { code: 'OK' } },
+    error(params) {
+      if (params?.errors instanceof Error) {
+        throw errors(params?.code || 403, params?.errors) 
+      } if (typeof params?.errors === 'string') {
+        throw errors.Unauthorized(params.errors)
+      } else {
+        throw errors.Unauthorized()
+      }
+    }
   }
 
   const result = await fn(data.input, natsuContext)
-  if (!['OK', 200].includes(result.code)) natsuContext.error(result)
+  if (!['OK', 200].includes(result.code)) natsuContext.error(result as any)
 })
 
-export const natsuHandle = (mod: any) => define.handle(async (data: NatsuRequestContext & NatsuContext & CallData) => {
-  const fn = mod.handle || mod.default?.handle
+export const natsuHandle = (mod: NatsuHandler) => define.handle(async data => {
+  const fn = mod.handle as unknown as NatsHandle<AnyService>
 
-  const natsuContext: NatsAuthorizationInjection<AnyService> = {
-    ...data, 
-    handler: undefined as any,
-    ok() { return { code: 'OK' }},
-    error(error: { code?: number, errors: unknown }) { throw errors(error?.code || 403, error?.errors) }
+  const natsuContext: NatsHandleInjection<AnyService> = {
+    subject: mod.subject,
+    message: data.context.msg as any,
+    natsService: data.context.natsService,
+    logService: data.context.logService,
+    handler: mod as any,
+    ok() { return { code: 'OK' } },
+    error(params) {
+      if (params?.errors instanceof Error) {
+        throw errors(params?.code || 500, params?.errors) 
+      } if (typeof params?.errors === 'string') {
+        throw errors.InternalServerError(params.errors)
+      } else {
+        throw errors.InternalServerError()
+      }
+    }
   }
 
   const result = await fn(data.input, natsuContext)
-  if (!['OK', 200].includes(result.code)) natsuContext.error(result)
+  if (!['OK', 200].includes(result.code)) natsuContext.error(result as any)
+  else {
+    return {
+      output: {
+        headers: result.headers as any,
+        body: result.body
+      }
+    }
+  }
 })
 
 export const handler = define.handler(async (config, mod) => {
-  return [natsuValidate(mod), natsuAuthorize(mod), natsuHandle(mod)]
+  const natsuComponent = mod?.default
+    ? handlerSchema.parse(mod.default)
+    : handlerSchema.parse(mod)
+
+  return [natsuValidate(natsuComponent), natsuAuthorize(natsuComponent), natsuHandle(natsuComponent)]
 })
 
-export const adaptor = define.adaptor(async (config: NatsuConfig, context: NatsuContext, router) => {
-  const nc = context.nc
+const contextSchema = z.object({
+  nc: z.any()
+})
+
+export const adaptor = define.adaptor(async (raio, router) => {
+  const nc = contextSchema.passthrough().parse(raio.context).nc as NatsConnection
 
   nc.subscribe('>', {
     callback(err, msg) {
@@ -142,21 +230,27 @@ export const adaptor = define.adaptor(async (config: NatsuConfig, context: Natsu
       else if (msg) {
         const subject = msg.subject
 
-        if (!router.has(subject)) return
+        const routeLogger = natsuLogger.child({ subject })
+        routeLogger.debug("incoming request")
+        if (!router.has(subject)) {
+          routeLogger.debug("router cannot handle subject, skipping")
+          return
+        }
 
+        routeLogger.debug("forward request to router")
         router.call(subject, {
           headers: msg.headers ? (msg.headers as MsgHdrsImpl).toRecord() as any : {},
           body: msg.data.length > 0 ? decode(msg.data) : undefined,
-          msg
-        } as CallData['input'])
-        .then(result => {
-          if (!msg.reply) return
+        }, { msg })
+          .then(result => {
+            routeLogger.debug({ result }, 'call completed')
+            if (!msg.reply) return
 
-          const headers = MsgHdrsImpl.fromRecord(result.output.headers as any)
-          const body = result.output.body ? encode(JSON.stringify(result.output.body)) : undefined
-          msg.respond(body, { headers })
-        })
-        .catch(console.error)
+            const headers = MsgHdrsImpl.fromRecord(result.output.headers as any)
+            const body = result.output.body ? encode(JSON.stringify(result.output.body)) : undefined
+            msg.respond(body, { headers })
+          })
+          .catch(console.error)
       }
     }
   })

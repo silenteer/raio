@@ -15,4 +15,4 @@ const handle: Service['handle'] = async (data, ctx) => {
 export default {
   subject: 'hello',
   handle,
-} as Service
+}

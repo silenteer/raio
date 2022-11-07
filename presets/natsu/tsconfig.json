@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
-        "alwaysStrict": true,
         "esModuleInterop": true,
         "sourceMap": true,
         "declaration": true,
         "declarationMap": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "strictNullChecks": true
     }
 }

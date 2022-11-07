@@ -2,20 +2,12 @@ import path from "path"
 import glob from "glob"
 import { createRouter, toRouteMatcher } from "radix3"
 import { z } from "zod"
-import pino from "pino"
 import { inspect } from "util"
 import merge from "lodash.merge"
 import { customAlphabet } from "nanoid"
 
 import type { CallContext, Router, AdaptorFn, ConfigFn, Raio, ContextFn, RequestContextFn, HandlerFn } from "."
-
-const logLevel = z
-  .enum(['debug', 'info', 'error'])
-  .optional()
-  .default('info')
-  .parse(process.env.LOG_LEVEL)
-  
-const logger = pino({ level: logLevel })
+import { logger } from "."
 
 const presetSchema = z.object({
   adaptor: z.function().optional(),
@@ -196,7 +188,13 @@ async function startServer(serverConfig: ServerConfig) {
 
   for (const maybeRoute of maybeRoutes) {
     const routeLogger = serverLogger.child({ route: maybeRoute, cwd, routeDirs })
-    const mod = await import(path.resolve(maybeRoute, maybeRoute))
+    const modulePath = path.resolve(cwd, maybeRoute)
+    routeLogger.debug({ modulePath }, 'importing')
+    
+    const mod = await import(modulePath)
+
+    const modMetadata = { path: maybeRoute, name: path.basename(maybeRoute, path.extname(maybeRoute)) } 
+    routeLogger.debug({ modMetadata })
 
     const resolvedFns = await app.handler(raio, mod) as Array<any>
 

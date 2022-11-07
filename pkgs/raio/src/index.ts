@@ -7,6 +7,17 @@
  * 
  */
 
+import { z } from "zod"
+import pino from "pino"
+
+const logLevel = z
+  .enum(['debug', 'info', 'error'])
+  .optional()
+  .default('info')
+  .parse(process.env.LOG_LEVEL)
+  
+export const logger = pino({ level: logLevel })
+
 export type Raio = {
   config: Dictionary
   context: Dictionary
@@ -30,10 +41,17 @@ export type CallContext = {
 export type ConfigFn<T extends Dictionary> = (server: Raio) => Promise<T> | T
 export type ContextFn<T extends Dictionary> = (server: Raio) => Promise<T> | T
 
-export type RequestContextFn<T extends Dictionary> = (data: Raio) => Promise<T> | T
+export type RequestContextFn<T extends Dictionary> = (data: CallContext) => Promise<T> | T
 
-export type HandleFn = (data: CallContext) => Promise<Pick<CallContext, 'output' | 'error'> | void> | Pick<CallContext, 'output' | 'error'> | void
-export type HandlerFn = (server: Raio, mod: any) => Promise<HandleFn[]> | HandleFn[]
+export type HandleReturnType = {
+  output?: { headers?: Dictionary<string>, body?: any }
+  error?: any
+} | void
+
+export type HandleFn = (data: CallContext) => Promise<HandleReturnType> | HandleReturnType
+
+export type ModMetadata = { name: string } & Record<string, any>
+export type HandlerFn = (server: Raio, mod: any, meta: ModMetadata) => Promise<HandleFn[]> | HandleFn[]
 
 export type AdaptorFn = (server: Raio, router: Router) => Promise<void>
 export type ErrorFn = (error: any, data: CallContext) => Promise<void>
