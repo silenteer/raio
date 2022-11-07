@@ -1,0 +1,8 @@
+{
+  "name": "raio.repl",
+  "packageManager": "yarn@3.2.4",
+  "dependencies": {
+    "pkgroll": "^1.4.0",
+    "raio": "workspace:^"
+  }
+}

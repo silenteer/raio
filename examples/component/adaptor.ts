@@ -1,4 +1,4 @@
-import { define, Router } from "raio";
+import { define, logger } from "raio";
 import { configSchema } from "./config";
 
 import fastify from "fastify"
@@ -7,7 +7,7 @@ import { connect, JSONCodec, MsgHdrsImpl } from "nats"
 const fastifyAdaptor = define.adaptor(async function (raio, router) {
   const validatedConfig = configSchema.parse(raio.config)
 
-  const server = fastify({ logger: true })
+  const server = fastify({ logger })
 
   server.get('/*', async (req, rep) => {
     const url = req.url.substring(1)
@@ -32,6 +32,30 @@ const fastifyAdaptor = define.adaptor(async function (raio, router) {
   server.listen({
     port: validatedConfig.port
   })
+})
+
+import repl from "repl"
+
+const replAdaptor = define.adaptor(async (raio, router) => {
+  const replServer = repl.start('🚀> ')
+  replServer.defineCommand('route', {
+    help: 'execute route',
+    action(args) {
+      if (router.has(args)) {
+        router.call(args, { headers: {}, body: undefined })
+          .then(result => {
+            console.log(result.output, '\n')
+            replServer.displayPrompt()
+          })
+      }
+
+      replServer.displayPrompt()
+    }
+  })
+
+  setTimeout(() => {
+    replServer.displayPrompt()
+  }, 200)
 })
 
 const natsAdaptor =  define.adaptor(async (raio, router) => {
@@ -68,5 +92,6 @@ export const adaptor = define.adaptor(
   async (raio, router) => {
     fastifyAdaptor(raio, router)
     natsAdaptor(raio, router)
+    replAdaptor(raio, router)
   }
 )

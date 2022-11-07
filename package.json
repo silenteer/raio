@@ -3,7 +3,8 @@
   "workspaces": [
     "pkgs/*",
     "presets/*",
-    "examples/*"
+    "examples/*",
+    "tests"
   ],
   "dependencies": {
     "nats": "^2.8.0",

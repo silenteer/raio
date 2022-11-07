@@ -37,6 +37,18 @@ const optionDefinitions: OptionDefinition[] = [
 		type: String,
 		alias: 'p',
 		description: 'use one file to config instead of dir based config with `config`, `context` and `handler`. Point this to a file with all of needed export'
+	},
+	{
+		name: 'execute',
+		type: String,
+		alias: 'e',
+		description: 'execute one of those route, ignore all of adaptors'
+	},
+	{
+		name: 'executeArgs',
+		alias: 'g',
+		type: String,
+		description: 'will be parsed as JSON. Only be processed if execute is defined. \n Must go in the format of { headers: ..., body: ...}'
 	}
 ]
 
@@ -55,6 +67,12 @@ if (options.help) {
 	console.log(usage)
 } else {
 	; (async () => {
-		await startServer({ cwd: options.cwd as any, routeDirs: options.dir, preset: options.preset ? [options.preset] : [] })
+		await startServer({
+			cwd: options.cwd as any,
+			routeDirs: options.dir,
+			preset: options.preset ? [options.preset] : [],
+			execute: options.execute,
+			executeArgs: options.executeArgs
+		})
 	})()
 }

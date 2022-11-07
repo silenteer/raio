@@ -1,0 +1,14 @@
+{
+  "name": "tests",
+  "packageManager": "yarn@3.2.4",
+  "dependencies": {
+    "execa": "^6.1.0",
+    "nats": "^2.9.0",
+    "raio": "workspace:^",
+    "raio.fastify": "workspace:^",
+    "raio.natsu": "workspace:^",
+    "tsx": "^3.11.0",
+    "typescript": "^4.8.4",
+    "vitest": "^0.24.5"
+  }
+}
