@@ -1,56 +1,76 @@
 
+/** Type intention
+ * 
+ *  server -> call -> call -> call -> ready to go -> start trigger, sharing the same instance, if you need to verify, verify it
+ *                                                        ⬇️
+ *                                                   request coming -> call -> call -> call -> return result
+ * 
+ */
+
+import { z } from "zod"
+import pino from "pino"
+
+const logLevel = z
+  .enum(['debug', 'info', 'error'])
+  .optional()
+  .default('info')
+  .parse(process.env.LOG_LEVEL)
+  
+export const logger = pino({ level: logLevel })
+
+export type Raio = {
+  config: Dictionary
+  context: Dictionary
+  routes: Array<any>
+}
+
 export type Fn<I = any, O = any> = (input: I) => O
 export type PromiseFn<I = any, T = any> = (input: I) => Promise<T>
 
 type Dictionary<T extends any = any> = Record<string, T>
-export type CallData = {
-  context: Dictionary,
-  config: Dictionary,
-  input: { headers: Dictionary<string>, body: any },
-  output: { headers: Dictionary<string>, body: any },
+export type CallContext = {
+  id: string
+  config: Dictionary
+  context: Dictionary
+  input: { headers: Dictionary<string>, body: any }
+  output: { headers: Dictionary<string>, body: any }
   error?: any
+  server: Raio
 }
 
-export type ConfigFn<T extends Dictionary> = (config?: Dictionary) => Promise<T> | T
-export type ContextFn<T extends Dictionary, C extends Dictionary = Dictionary> = (config: C, context: Dictionary) => Promise<T> | T
+export type ConfigFn<T extends Dictionary> = (server: Raio) => Promise<T> | T
+export type ContextFn<T extends Dictionary> = (server: Raio) => Promise<T> | T
 
-export type RequestContextFn<
-  T extends Dictionary,
-  Context extends Dictionary,
-  Config extends Dictionary
-> = (data: CallData, context: Context, config: Config) => Promise<T> | T
+export type RequestContextFn<T extends Dictionary> = (data: CallContext) => Promise<T> | T
 
-export type HandleFn = (data: CallData) => Promise<void>
-export type HandlerFn = (data: CallData, mod: any) => Promise<HandleFn[]> | HandleFn[]
+export type HandleReturnType = {
+  output?: { headers?: Dictionary<string>, body?: any }
+  error?: any
+} | void
 
-export type AdaptorFn<
-  Config extends Dictionary, 
-  Context extends Dictionary
-> = (config: Config, context: Context, router: Router) => Promise<void>
-export type ErrorFn = (error: any, data: CallData) => Promise<void>
+export type HandleFn = (data: CallContext) => Promise<HandleReturnType> | HandleReturnType
+
+export type ModMetadata = { name: string } & Record<string, any>
+export type HandlerFn = (server: Raio, mod: any, meta: ModMetadata) => Promise<HandleFn[]> | HandleFn[]
+
+export type AdaptorFn = (server: Raio, router: Router) => Promise<void>
+export type ErrorFn = (error: any, data: CallContext) => Promise<void>
 
 export type Router = {
-  call: (path: string, data: CallData['input']) => Promise<CallData>,
+  call: (path: string, data: CallContext['input'], callConfig?: Dictionary) => Promise<CallContext>,
   has: Fn<any, boolean>
 }
 
-export function defineConfig<T extends Dictionary>(configFn: ConfigFn<T>) { return configFn }
-export type inferConfig<T> = T extends typeof defineConfig<infer Y> ? Y : never
+export function defineConfig<T extends Dictionary>(configFn: (server: Raio) => Promise<T> | T): ConfigFn<T> { return configFn }
+export function defineContext<T extends Dictionary>(contextFn: (server: Raio) => Promise<T> | T): ContextFn<T> { return contextFn }
 
-export function defineContext<T extends Dictionary, C extends Dictionary>(contextFn: ContextFn<T, C>) { return contextFn }
-export type inferContext<T> = T extends typeof defineContext<infer Y, any> ? Y : never
-
-export function defineRequestContext<T extends Dictionary, Context extends Dictionary = {}, Config extends Dictionary = {}>(requestFn: RequestContextFn<T, Context, Config>) { return requestFn }
-export type inferRequestContext<T> = T extends typeof defineRequestContext<infer Y, any, any> ? Y : never
-
+export function defineRequestContext<T extends Dictionary>(requestFn: RequestContextFn<T>) { return requestFn }
 export function defineHandler(handlerFn: HandlerFn) { return handlerFn }
 export function defineHandle(handleFn: HandleFn) { return handleFn }
 
 export function defineError(errorFn: ErrorFn) { return errorFn }
 
-export function defineAdaptor<
-  Config extends Dictionary,
-  Context extends Dictionary>(adaptorFn: AdaptorFn<Config, Context>) { return adaptorFn }
+export function defineAdaptor(adaptorFn: AdaptorFn) { return adaptorFn }
 
 export const define = {
   adaptor: defineAdaptor,

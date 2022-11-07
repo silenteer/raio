@@ -4,10 +4,11 @@ import { z } from "zod"
 
 const log = define.handle(async (data) => {
   console.log('logging', { data })
+  return data
 })
 
 const handlerSchema = z.object({
-  handle: z.function().returns(z.promise(z.void()))
+  handle: z.function().returns(z.any())
 })
 
 export const handler = define.handler((config, mod) => {

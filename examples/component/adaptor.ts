@@ -1,10 +1,12 @@
 import { define, Router } from "raio";
-import { Config } from "./config";
+import { configSchema } from "./config";
 
 import fastify from "fastify"
 import { connect, JSONCodec, MsgHdrsImpl } from "nats"
 
-const fastifyAdaptor = define.adaptor(async function (config: Config, context, router: Router) {
+const fastifyAdaptor = define.adaptor(async function (raio, router) {
+  const validatedConfig = configSchema.parse(raio.config)
+
   const server = fastify({ logger: true })
 
   server.get('/*', async (req, rep) => {
@@ -14,11 +16,10 @@ const fastifyAdaptor = define.adaptor(async function (config: Config, context, r
     if (router.has(url)) {
       const data = {
         headers: req.headers as any,
-        body: Object.assign({}, req.params, req.body, req.query),
-        req, rep
+        body: Object.assign({}, req.params, req.body, req.query)
       }
 
-      const result = await router.call(url, data)
+      const result = await router.call(url, data, { id: req.id, req, rep })
         .catch(error => { throw error })
       console.log({result})
       return rep.send(result?.['output']?.['body'])
@@ -29,11 +30,11 @@ const fastifyAdaptor = define.adaptor(async function (config: Config, context, r
   })
 
   server.listen({
-    port: config.port
+    port: validatedConfig.port
   })
 })
 
-const natsAdaptor =  define.adaptor(async (config: Config, context, server: Router) => {
+const natsAdaptor =  define.adaptor(async (raio, router) => {
   const nc = await connect()
   const { encode, decode } = JSONCodec()
 
@@ -41,13 +42,16 @@ const natsAdaptor =  define.adaptor(async (config: Config, context, server: Rout
     async callback(err, msg) {
       const { subject, data } = msg
 
-      if (server.has(subject)) {
+      if (router.has(subject)) {
         const input = {
           headers: msg.headers ? (msg.headers as MsgHdrsImpl).toRecord() as any : undefined,
           body: data.length > 0 ? decode(data) : undefined
         }
 
-        const result = await server.call(subject, input)
+        const result = await router.call(subject, input, {
+          id: `${msg.subject}-${msg.sid}`,
+          msg
+        })
 
         if (msg.reply) {
           if (result['output'].body) {
@@ -60,9 +64,9 @@ const natsAdaptor =  define.adaptor(async (config: Config, context, server: Rout
   })
 })
 
-async function adaptor(config: Config, context, server: Router) {
-  fastifyAdaptor(config, context, server)
-  natsAdaptor(config, context, server)
-}
-
-export { adaptor }
+export const adaptor = define.adaptor(
+  async (raio, router) => {
+    fastifyAdaptor(raio, router)
+    natsAdaptor(raio, router)
+  }
+)

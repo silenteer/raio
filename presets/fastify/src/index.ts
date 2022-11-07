@@ -1,18 +1,21 @@
 import { z } from "zod"
 import fastify from "fastify"
-import { CallData, define, inferDefine } from "raio"
+import { CallContext, define, inferDefine } from "raio"
+
+const configSchema = z.object({
+  port: z.number().default(3000)
+})
 
 export const config = define.config(() => {
-  const schema = z.object({
-    port: z.number().default(3000)
+  return configSchema.parse({
+    port: process.env.FASTIFY_PORT
   })
-
-  return schema.parse({})
 })
 
 export type RaioFastifyConfig = inferDefine<typeof config>
 
-export const adaptor = define.adaptor(async (config: RaioFastifyConfig, router) => {
+export const adaptor = define.adaptor(async (raio, router) => {
+  const config = configSchema.parse(raio.config)
   const server = fastify({ logger: true })
 
   server.get('/*', async (req, rep) => {
@@ -20,12 +23,12 @@ export const adaptor = define.adaptor(async (config: RaioFastifyConfig, router) 
     req.log.info({ url })
 
     if (router.has(url)) {
-      const data: CallData['input'] = {
+      const data: CallContext['input'] = {
         headers: req.headers as any,
         body: Object.assign({}, req.params, req.query, req.body)
       }
 
-      const result = await router.call(url, data)
+      const result = await router.call(url, data, { id: req.id, req, rep })
 
       return rep
         .headers(result.output.headers)
