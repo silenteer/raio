@@ -36,8 +36,8 @@ export const config = define.config(() => {
 
 export type NatsuConfig = z.infer<typeof natsuConfigSchema>
 
-export const context = define.context(async (config) => {
-  const natsuConfig = natsuConfigSchema.parse(config)
+export const context = define.context(async (server) => {
+  const natsuConfig = natsuConfigSchema.parse(server.config)
   
   const nc = await connect({ servers: natsuConfig.urls, user: natsuConfig.user, pass: natsuConfig.pass })
   const { encode, decode } = JSONCodec()
@@ -209,7 +209,7 @@ export const natsuHandle = (mod: NatsuHandler) => define.handle(async data => {
   }
 })
 
-export const handler = define.handler(async (config, mod) => {
+export const handler = define.handler(async (server, mod) => {
   const natsuComponent = mod?.default
     ? handlerSchema.parse(mod.default)
     : handlerSchema.parse(mod)
@@ -221,8 +221,8 @@ const contextSchema = z.object({
   nc: z.any()
 })
 
-export const adaptor = define.adaptor(async (raio, router) => {
-  const nc = contextSchema.passthrough().parse(raio.context).nc as NatsConnection
+export const adaptor = define.adaptor(async (server, router) => {
+  const nc = contextSchema.passthrough().parse(server.context).nc as NatsConnection
 
   nc.subscribe('>', {
     callback(err, msg) {
