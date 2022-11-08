@@ -2352,6 +2352,7 @@ __metadata:
     nats: ^2.8.0
     pkgroll: ^1.4.0
     raio: "*"
+    zod: ^3.19.1
   languageName: unknown
   linkType: soft
 
