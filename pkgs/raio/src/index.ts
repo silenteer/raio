@@ -11,12 +11,14 @@ import { z } from "zod"
 import pino from "pino"
 
 const logLevel = z
-  .enum(['debug', 'info', 'error'])
+  .enum(['debug', 'info', 'error', 'silent'])
   .optional()
-  .default('info')
+  .default('silent')
   .parse(process.env.LOG_LEVEL)
   
-export const logger = pino({ level: logLevel })
+export const logger = pino({ 
+  level: logLevel
+})
 
 export type Raio = {
   config: Dictionary

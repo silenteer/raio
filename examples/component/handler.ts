@@ -13,5 +13,5 @@ const handlerSchema = z.object({
 
 export const handler = define.handler((config, mod) => {
   const handler = handlerSchema.parse(mod)
-  return [ log, handler.handle, log ]
+  return [ handler.handle ]
 })

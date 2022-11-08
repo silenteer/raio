@@ -73,7 +73,7 @@ async function loadModule(
 
   if (required && moduleFiles.length === 0) {
     const error = new Error(`Expected to have ${moduleName} at ${cwd}`)
-    moduleLogger.error({ error }, 'Unexpected module format')
+    moduleLogger.error(error, 'Unexpected module format')
     throw error
   } else if (!required && moduleFiles.length === 0) {
     moduleLogger.debug('skip on non required module')
@@ -82,7 +82,7 @@ async function loadModule(
 
   if (moduleFiles.length > 1) {
     const error = new Error(`Expected to have only one file of type ${moduleName}`)
-    moduleLogger.error({ error }, 'Duplicated module')
+    moduleLogger.error(error, 'Duplicated module')
     throw error
   }
 
@@ -100,11 +100,11 @@ async function loadModule(
     ? presetSchema.parse(mod)
     : schemas[type].parse(mod)
 
-  moduleLogger.info({ test: validatedMod['adaptor'] }, 'loaded successfully')
-  return mod
+  return validatedMod
 }
 
 async function dynamicLoad(serverConfig: ServerConfig) {
+  logger.warn('component load is being deprecated, use preset instead')
   const { cwd, routeDirs, preset } = serverConfig
   const dynamicLoadLogger = logger.child({ name: 'dynamicLoad' })
   dynamicLoadLogger.debug({ cwd, routeDirs, preset }, 'raio config')
@@ -272,6 +272,7 @@ async function startServer(serverConfig: ServerConfig) {
         executeArgs as any || { headers: {}, body: undefined }
       )
       logger.debug({ output: result.output }, 'executed')
+      console.log(JSON.stringify(result.output))
       process.exit(0)
     } else {
       logger.error('cannot find route %s', serverConfig.execute)
