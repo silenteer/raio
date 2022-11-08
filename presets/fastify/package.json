@@ -1,7 +1,7 @@
 {
   "name": "raio.fastify",
   "packageManager": "yarn@3.2.4",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "dependencies": {
     "fastify": "^4.9.2",
     "pkgroll": "^1.4.0",
