@@ -8,8 +8,11 @@
     "raio": "*",
     "zod": "^3.19.1"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "require": "./dist/index.js",
+    "import": "./dist/index.mjs"
+  },
   "scripts": {
     "build": "pkgroll",
     "build:raio.fastify": "yarn build"
