@@ -1,6 +1,8 @@
+import 'esbuild-register'
+
 import commandLineArgs from 'command-line-args'
 import commandLineUsage, { OptionDefinition } from 'command-line-usage'
-import 'esbuild-register'
+
 import { startServer } from './server'
 
 const optionDefinitions: OptionDefinition[] = [

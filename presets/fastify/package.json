@@ -1,18 +1,17 @@
 {
   "name": "raio.fastify",
   "packageManager": "yarn@3.2.4",
-  "version": "1.0.2",
-  "dependencies": {
+  "version": "1.0.3",
+  "peerDependencies": {
     "fastify": "^4.9.2",
-    "pkgroll": "^1.4.0",
     "raio": "*",
     "zod": "^3.19.1"
   },
-  "exports": {
-    "types": "./dist/index.d.ts",
-    "require": "./dist/index.js",
-    "import": "./dist/index.mjs"
+  "devDependencies": {
+    "pkgroll": "^1.4.0"
   },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "pkgroll",
     "build:raio.fastify": "yarn build"

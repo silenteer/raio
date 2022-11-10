@@ -209,12 +209,27 @@ export const natsuHandle = (mod: NatsuHandler) => define.handle(async data => {
   }
 })
 
-export const handler = define.handler(async (server, mod) => {
+export const handler = define.handler(async (server, mod, meta) => {
+  
   const natsuComponent = mod?.default
-    ? handlerSchema.parse(mod.default)
-    : handlerSchema.parse(mod)
+  ? handlerSchema.parse(mod.default)
+  : handlerSchema.parse(mod)
+  
+  return async (callContext) => {
+    const routeLogger = natsuLogger.child({ name: `route-${meta.name}-${callContext.id}` })
+    // error will be thrown
+    routeLogger.debug('incoming')
+    const result = await Promise.resolve()
+      .then(_ => natsuValidate(natsuComponent)(callContext))
+      .then(_ => natsuAuthorize(natsuComponent)(callContext))
+      .then(_ => natsuHandle(natsuComponent)(callContext))
+      .catch(error => {
+        routeLogger.error(error, 'route caught an error')
+        throw error
+      })
 
-  return [natsuValidate(natsuComponent), natsuAuthorize(natsuComponent), natsuHandle(natsuComponent)]
+    return result
+  }
 })
 
 const contextSchema = z.object({

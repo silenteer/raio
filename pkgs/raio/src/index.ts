@@ -53,14 +53,15 @@ export type HandleReturnType = {
 export type HandleFn = (data: CallContext) => Promise<HandleReturnType> | HandleReturnType
 
 export type ModMetadata = { name: string } & Record<string, any>
-export type HandlerFn = (server: Raio, mod: any, meta: ModMetadata) => Promise<HandleFn[]> | HandleFn[]
+export type HandlerFn = (server: Raio, mod: any, meta: ModMetadata) => Promise<HandleFn> | HandleFn
 
 export type AdaptorFn = (server: Raio, router: Router) => Promise<void>
 export type ErrorFn = (error: any, data: CallContext) => Promise<void>
 
 export type Router = {
   call: (path: string, data: CallContext['input'], callConfig?: Dictionary) => Promise<CallContext>,
-  has: Fn<any, boolean>
+  has: Fn<any, boolean>,
+  _router: RadixRouter
 }
 
 export function defineConfig<T extends Dictionary>(configFn: (server: Raio) => Promise<T> | T): ConfigFn<T> { return configFn }
@@ -87,4 +88,5 @@ export const define = {
 export type inferDefine<T extends (...args: any[]) => any> = Awaited<ReturnType<T>>
 
 import createHttpError from "http-errors"
+import { RadixRouter } from "radix3"
 export { createHttpError as errors }

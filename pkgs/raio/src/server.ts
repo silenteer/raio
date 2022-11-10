@@ -8,6 +8,7 @@ import { customAlphabet } from "nanoid"
 
 import { CallContext, Router, AdaptorFn, ConfigFn, Raio, ContextFn, RequestContextFn, HandlerFn, define } from "."
 import { logger } from "."
+import { HandleFn } from "../dist"
 
 const presetSchema = z.object({
   adaptor: z.function().optional(),
@@ -93,7 +94,7 @@ async function loadModule(
     ? `${cwd}/${loadingModuleFile}`
     : loadingModuleFile
 
-  const mod = await import(loadingPath)
+  const mod = require(loadingPath)
   moduleLogger.debug('testing againts zod')
 
   const validatedMod = type === 'preset'
@@ -135,7 +136,7 @@ async function dynamicLoad(serverConfig: ServerConfig) {
       handler: handlerMod?.handler as HandlerFn | undefined
     }
   }
-
+  
   const presetApp = preset ? await loadPreset() : {}
   const components = await loadComponent()
 
@@ -153,12 +154,12 @@ const defaultHandleSchema = z.object({
 const defaultHandler = define.handler(async (server, mod, modMeta) => {
   const handlerLogger = logger.child({ name: 'defaultHandler' })
   handlerLogger.debug('setting up handler')
-
+  
   const handle = mod.default
-    ? defaultHandleSchema.parse(mod.default)
-    : defaultHandleSchema.parse(mod)
+    ? mod.default
+    : defaultHandleSchema.parse(mod).handle
 
-  return [handle] as any // should be validated to have handle already
+  return handle // should be validated to have handle already
 })
 
 async function startServer(serverConfig: ServerConfig) {
@@ -217,7 +218,7 @@ async function startServer(serverConfig: ServerConfig) {
     const modMetadata = { path: maybeRoute, name: path.basename(maybeRoute, path.extname(maybeRoute)) }
     routeLogger.debug({ modMetadata })
 
-    const resolvedFns = await app.handler(raio, mod) as Array<any>
+    const handleFn = await app.handler(raio, mod, modMetadata) as HandleFn
 
     const caller = async (data: CallContext['input'], callConfig: Record<string, any>) => {
       let callContext: CallContext = {
@@ -236,12 +237,10 @@ async function startServer(serverConfig: ServerConfig) {
       callContext = merge(callContext, { context: requestContext })
       callLogger.debug({ requestContext }, 'resolved request context')
 
-      for await (const resolvedFn of resolvedFns) {
-        callLogger.debug('before calling')
-        const resolvedCallContext = await resolvedFn(callContext)
-        callContext = merge(callContext, resolvedCallContext)
-        callLogger.debug('after calling')
-      }
+      callLogger.debug('before calling')
+      const resolvedCallContext = await handleFn(callContext)
+      callContext = merge(callContext, resolvedCallContext)
+      callLogger.debug('after calling')
 
       return callContext
     }
@@ -261,6 +260,7 @@ async function startServer(serverConfig: ServerConfig) {
     has: (route: string) => {
       return !!router.lookup(route)
     },
+    _router: router
   }
 
   serverLogger.debug({ routes: router.ctx.staticRoutesMap }, "route table")
@@ -278,9 +278,12 @@ async function startServer(serverConfig: ServerConfig) {
       logger.error('cannot find route %s', serverConfig.execute)
       process.exit(1)
     }
-  } else {
+  } else if(app.adaptor) {
     serverLogger.info("Triggering adaptors")
     await app.adaptor(raio, adaptorRouter)
+  } else {
+    serverLogger.info("There's nothign to process further, exiting")
+    process.exit(0)
   }
 
 }
