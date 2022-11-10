@@ -6,7 +6,7 @@ import { inspect } from "util"
 import merge from "lodash.merge"
 import { customAlphabet } from "nanoid"
 
-import { CallContext, Router, AdaptorFn, ConfigFn, Raio, ContextFn, RequestContextFn, HandlerFn, define } from "."
+import { CallContext, Router, AdaptorFn, ConfigFn, Raio, ContextFn, RequestContextFn, HandlerFn, define, Handler } from "."
 import { logger } from "."
 import { HandleFn } from "../dist"
 
@@ -159,7 +159,10 @@ const defaultHandler = define.handler(async (server, mod, modMeta) => {
     ? mod.default
     : defaultHandleSchema.parse(mod).handle
 
-  return handle // should be validated to have handle already
+  return {
+    handle,
+    metadata: modMeta
+  } // use to remap name
 })
 
 async function startServer(serverConfig: ServerConfig) {
@@ -218,7 +221,7 @@ async function startServer(serverConfig: ServerConfig) {
     const modMetadata = { path: maybeRoute, name: path.basename(maybeRoute, path.extname(maybeRoute)) }
     routeLogger.debug({ modMetadata })
 
-    const handleFn = await app.handler(raio, mod, modMetadata) as HandleFn
+    const handler = await app.handler(raio, mod, modMetadata) as Handler
 
     const caller = async (data: CallContext['input'], callConfig: Record<string, any>) => {
       let callContext: CallContext = {
@@ -238,18 +241,17 @@ async function startServer(serverConfig: ServerConfig) {
       callLogger.debug({ requestContext }, 'resolved request context')
 
       callLogger.debug('before calling')
-      const resolvedCallContext = await handleFn(callContext)
+      const resolvedCallContext = await handler.handle(callContext)
       callContext = merge(callContext, resolvedCallContext)
       callLogger.debug('after calling')
 
       return callContext
     }
 
-    const routePath = path.basename(maybeRoute, path.extname(maybeRoute))
-    routes.push(routePath)
+    routes.push(handler.metadata.name)
 
-    serverLogger.info({ route: routePath }, 'registering route to router')
-    router.insert(routePath, { caller })
+    serverLogger.info({ route: handler.metadata.name }, 'registering route to router')
+    router.insert(handler.metadata.name, { caller })
   }
 
   const adaptorRouter: Router = {

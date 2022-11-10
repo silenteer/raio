@@ -215,7 +215,7 @@ export const handler = define.handler(async (server, mod, meta) => {
   ? handlerSchema.parse(mod.default)
   : handlerSchema.parse(mod)
   
-  return async (callContext) => {
+  const handle = async (callContext) => {
     const routeLogger = natsuLogger.child({ name: `route-${meta.name}-${callContext.id}` })
     // error will be thrown
     routeLogger.debug('incoming')
@@ -229,6 +229,13 @@ export const handler = define.handler(async (server, mod, meta) => {
       })
 
     return result
+  }
+
+  return {
+    handle,
+    metadata: {
+      name: natsuComponent.subject
+    }
   }
 })
 

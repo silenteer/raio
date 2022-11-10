@@ -53,7 +53,13 @@ export type HandleReturnType = {
 export type HandleFn = (data: CallContext) => Promise<HandleReturnType> | HandleReturnType
 
 export type ModMetadata = { name: string } & Record<string, any>
-export type HandlerFn = (server: Raio, mod: any, meta: ModMetadata) => Promise<HandleFn> | HandleFn
+
+
+export type HandlerFn = (server: Raio, mod: any, meta: ModMetadata) => Promise<Handler> | Handler
+export type Handler = {
+  metadata: { name: string } & Record<string, any>
+  handle: HandleFn
+}
 
 export type AdaptorFn = (server: Raio, router: Router) => Promise<void>
 export type ErrorFn = (error: any, data: CallContext) => Promise<void>

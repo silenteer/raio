@@ -2464,7 +2464,7 @@ __metadata:
     pkgroll: ^1.4.0
   peerDependencies:
     nats: ^2.8.0
-    raio: "*"
+    raio: ^1.2.1
     zod: ^3.19.1
   languageName: unknown
   linkType: soft
