@@ -6,9 +6,14 @@
     "examples/*",
     "tests"
   ],
+  "scripts": {
+    "pkg:release": "standard-version"
+  },
   "dependencies": {
+    "commitizen": "^4.2.5",
     "nats": "^2.8.0",
     "pino": "^8.7.0",
-    "pkgroll": "^1.4.0"
+    "pkgroll": "^1.4.0",
+    "standard-version": "^9.5.0"
   }
 }
