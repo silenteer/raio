@@ -15,6 +15,6 @@
   "scripts": {
     "build": "pkgroll",
     "build:raio.fastify": "yarn build",
-    "publish": "standard-version -t raio.fastify/"
+    "prepare": "standard-version --path . -t raio.fastify/"
   }
 }

@@ -47,6 +47,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "prepare": "standard-version --path . -t raio/",
     "build:raio": "yarn build",
     "build": "pkgroll",
     "dev": "pkgroll -w"
