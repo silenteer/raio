@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/silenteer/raio/compare/raio/2.0.0...raio/2.2.0) (2022-11-14)
+
+
+### Features
+
+* added healthcheck ([10ee353](https://github.com/silenteer/raio/commit/10ee35388675cc4bcfef5ffff75967d96d6b4f6e))
+
 ## [2.1.0](https://github.com/silenteer/raio/compare/v1.3.0...v2.1.0) (2022-11-14)
 
 
