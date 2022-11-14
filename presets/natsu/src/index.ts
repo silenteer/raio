@@ -21,24 +21,20 @@ const logService: LogService = {
 }
 
 const natsuConfigSchema = z.object({
-  urls: z.string().array().optional(),
-  user: z.string().optional(),
-  pass: z.string().optional()
-})
-
-export const config = define.config(() => {
-  return natsuConfigSchema.parse({
-    urls: process.env.NATS_URLS,
-    user: process.env.NATS_USER,
-    pass: process.env.NATS_PASS
-  })
+  urls: z.string({ description: 'url to connect to nats, set via natsu.urls, expect string[]' }).array().optional(),
+  user: z.string({ description: 'user to connect to nats, set via natsu.user'}).optional(),
+  pass: z.string({ description: 'pass to connect to nats, set via natsu.pass'}).optional()
 })
 
 export type NatsuConfig = z.infer<typeof natsuConfigSchema>
 
 export const context = define.context(async (server) => {
-  const natsuConfig = natsuConfigSchema.parse(server.config)
-  
+  const natsuConfig = natsuConfigSchema.parse({
+    urls: server.getConfig('natsu.urls'),
+    user: server.getConfig('natsu.user'),
+    pass: server.getConfig('natsu.pass')
+  })
+
   const nc = await connect({ servers: natsuConfig.urls, user: natsuConfig.user, pass: natsuConfig.pass })
   const { encode, decode } = JSONCodec()
   const ns: NatsUtils = {
@@ -215,24 +211,25 @@ export const handler = define.handler(async (server, mod, meta) => {
   ? handlerSchema.parse(mod.default)
   : handlerSchema.parse(mod)
   
-  const handle = async (callContext) => {
-    const routeLogger = natsuLogger.child({ name: `route-${meta.name}-${callContext.id}` })
-    // error will be thrown
-    routeLogger.debug('incoming')
-    const result = await Promise.resolve()
-      .then(_ => natsuValidate(natsuComponent)(callContext))
-      .then(_ => natsuAuthorize(natsuComponent)(callContext))
-      .then(_ => natsuHandle(natsuComponent)(callContext))
-      .catch(error => {
-        routeLogger.error(error, 'route caught an error')
-        throw error
-      })
-
-    return result
-  }
-
   return {
-    handle,
+    handle: async (callContext) => {
+      const routeComponent = { ...natsuComponent}
+      callContext.instrument(routeComponent)
+
+      const routeLogger = natsuLogger.child({ name: `route-${meta.name}-${callContext.id}` })
+      // error will be thrown
+      routeLogger.debug('incoming')
+      const result = await Promise.resolve()
+        .then(_ => natsuValidate(routeComponent)(callContext))
+        .then(_ => natsuAuthorize(routeComponent)(callContext))
+        .then(_ => natsuHandle(routeComponent)(callContext))
+        .catch(error => {
+          routeLogger.error(error, 'route caught an error')
+          throw error
+        })
+  
+      return result
+    },
     metadata: {
       name: natsuComponent.subject
     }
@@ -243,6 +240,10 @@ const contextSchema = z.object({
   nc: z.any()
 })
 
+import opentelementry, { SpanStatusCode } from "@opentelemetry/api"
+
+const tracer = opentelementry.trace.getTracer('natsu')
+
 export const adaptor = define.adaptor(async (server, router) => {
   const nc = contextSchema.passthrough().parse(server.context).nc as NatsConnection
 
@@ -250,6 +251,8 @@ export const adaptor = define.adaptor(async (server, router) => {
     callback(err, msg) {
       if (err) { console.log(err) }
       else if (msg) {
+        const span = tracer.startSpan(`natsu/${msg.subject}`)
+
         const subject = msg.subject
 
         const routeLogger = natsuLogger.child({ subject })
@@ -263,16 +266,21 @@ export const adaptor = define.adaptor(async (server, router) => {
         router.call(subject, {
           headers: msg.headers ? (msg.headers as MsgHdrsImpl).toRecord() as any : {},
           body: msg.data.length > 0 ? decode(msg.data) : undefined,
-        }, { msg })
+        }, { msg, span })
           .then(result => {
             routeLogger.debug({ result }, 'call completed')
             if (!msg.reply) return
 
-            const headers = MsgHdrsImpl.fromRecord(result.output.headers as any)
-            const body = result.output.body ? encode(JSON.stringify(result.output.body)) : undefined
-            msg.respond(body, { headers })
+            // const headers = MsgHdrsImpl.fromRecord(result.output.headers as any)
+            const body = result.output.body ? encode(JSON.stringify(result.output)) : undefined
+            msg.respond(body)
+            
+            span.setStatus({ code: SpanStatusCode.OK }).end()
           })
-          .catch(console.error)
+          .catch(e => {
+            span.recordException(e)
+            span.setStatus({ code: SpanStatusCode.ERROR }).end()
+          })
       }
     }
   })
