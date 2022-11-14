@@ -1,8 +1,10 @@
 {
   "name": "raio.repl",
+  "version": "1.0.1",
   "packageManager": "yarn@3.2.4",
   "dependencies": {
     "pkgroll": "^1.4.0",
     "raio": "workspace:^"
-  }
+  },
+  "main": "dist/index.js"
 }
