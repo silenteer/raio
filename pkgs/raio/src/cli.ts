@@ -1,5 +1,3 @@
-import 'esbuild-register'
-
 import commandLineArgs from 'command-line-args'
 import commandLineUsage, { OptionDefinition } from 'command-line-usage'
 
@@ -37,6 +35,7 @@ const optionDefinitions: OptionDefinition[] = [
 	{
 		name: 'preset',
 		type: String,
+		multiple: true,
 		alias: 'p',
 		description: 'use one file to config instead of dir based config with `config`, `context` and `handler`. Point this to a file with all of needed export'
 	},
@@ -51,6 +50,21 @@ const optionDefinitions: OptionDefinition[] = [
 		alias: 'g',
 		type: String,
 		description: 'will be parsed as JSON. Only be processed if execute is defined. \n Must go in the format of { headers: ..., body: ...}'
+	},
+	{
+		name: 'name',
+		type: String,
+		description: 'application name, default to cwd name'
+	},
+	{
+		name: 'config-prefix',
+		type: String,
+		description: 'prefix for environemnt-based configuration loading. Default RAIO'
+	},
+	{
+		name: 'env',
+		type: String,
+		description: '.env file to be loaded. Default to .env in the cwd'
 	}
 ]
 
@@ -70,11 +84,15 @@ if (options.help) {
 } else {
 	; (async () => {
 		await startServer({
+			name: options.name,
 			cwd: options.cwd as any,
 			routeDirs: options.dir,
-			preset: options.preset ? [options.preset] : [],
+			preset: options.preset ? options.preset : [],
 			execute: options.execute,
-			executeArgs: options.executeArgs
+			executeArgs: options.executeArgs,
+			configPrefix: options['config-prefix'],
+			env: options.env,
 		})
+		.catch(e => console.error(e))
 	})()
 }
