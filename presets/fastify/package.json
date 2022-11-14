@@ -14,6 +14,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "pkgroll",
-    "build:raio.fastify": "yarn build"
+    "build:raio.fastify": "yarn build",
+    "publish": "standard-version -t raio.fastify/"
   }
 }

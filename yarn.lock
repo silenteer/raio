@@ -5380,9 +5380,10 @@ __metadata:
     "@silenteer/natsu": ^1.0.25
     "@silenteer/natsu-type": ^0.0.12
     pkgroll: ^1.4.0
+    standard-version: ^9.5.0
   peerDependencies:
     nats: ^2.8.0
-    raio: ^1.2.1
+    raio: ^2
     zod: ^3.19.1
   languageName: unknown
   linkType: soft
@@ -5392,11 +5393,12 @@ __metadata:
   resolution: "raio.repl@workspace:presets/repl"
   dependencies:
     pkgroll: ^1.4.0
-    raio: "workspace:^"
+    raio: ^2
+    standard-version: ^9.5.0
   languageName: unknown
   linkType: soft
 
-"raio@workspace: *, raio@workspace:^, raio@workspace:pkgs/raio":
+"raio@^2, raio@workspace: *, raio@workspace:^, raio@workspace:pkgs/raio":
   version: 0.0.0-use.local
   resolution: "raio@workspace:pkgs/raio"
   dependencies:
