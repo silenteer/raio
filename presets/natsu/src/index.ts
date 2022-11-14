@@ -244,6 +244,14 @@ import opentelementry, { SpanStatusCode } from "@opentelemetry/api"
 
 const tracer = opentelementry.trace.getTracer('natsu')
 
+export const healthcheck = define.healthcheck(async (server) => {
+  const nc = contextSchema.passthrough().parse(server.context).nc as NatsConnection
+  
+  if (nc.isClosed()) {
+    throw errors.InternalServerError('nats is disconnected')
+  }
+})
+
 export const adaptor = define.adaptor(async (server, router) => {
   const nc = contextSchema.passthrough().parse(server.context).nc as NatsConnection
 
