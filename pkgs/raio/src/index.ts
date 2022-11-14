@@ -31,6 +31,11 @@ export type ConfigFn<T extends Dictionary> = (server: Raio) => Promise<T> | T
 export type ContextFn<T extends Dictionary> = (server: Raio) => Promise<T> | T
 export type HealthCheckFn = (server: Raio) => Promise<void> | void
 
+export type HealtcheckResult = {
+  status: 'OK' | 'KO',
+  errors?: any[]
+}
+
 export type Raio = {
   config: Dictionary
   context: Dictionary
@@ -38,7 +43,7 @@ export type Raio = {
   getConfig(path: string): unknown
   loadConfig(configFn: ConfigFn<any>): Promise<void>
   loadContext(contextFn: ContextFn<any>): Promise<void>
-  check(): Promise<void>
+  healthcheck(): Promise<HealtcheckResult>
   inspect(): Promise<Dictionary>
 }
 
@@ -65,7 +70,7 @@ export type ErrorFn = (error: any, data: CallContext) => Promise<CallContext['ou
 export type Router = {
   call: (path: string, data: CallContext['input'], callConfig?: Dictionary) => Promise<CallContext>,
   has: Fn<any, boolean>,
-  check(): Promise<void>
+  healthcheck(): Promise<HealtcheckResult>
   _router: RadixRouter
 }
 
@@ -92,9 +97,20 @@ export const define = {
   error: defineError
 }
 
+export type Mod = {
+  adaptor?: AdaptorFn
+  config?: ConfigFn<any>
+  context?: ContextFn<any>
+  requestContext?: RequestContextFn<any>
+  handler?: HandlerFn
+  healthcheck?: HealthCheckFn
+  error?: ErrorFn
+}
+
+export const defineModule = (mod: Mod) => { return mod }
+
 export type inferDefine<T extends (...args: any[]) => any> = Awaited<ReturnType<T>>
 
 import createHttpError from "http-errors"
 import { RadixRouter } from "radix3"
-import { inspect } from "util"
 export { createHttpError as errors }

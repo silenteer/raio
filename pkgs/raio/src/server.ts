@@ -25,7 +25,8 @@ const presetSchema = z.object({
   context: z.function().optional(),
   requestContext: z.function().optional(),
   handler: z.function().optional(),
-  error: z.function().optional()
+  error: z.function().optional(),
+  healtcheck: z.function().optional()
 })
 
 export const defaultHandler = define.handler(async (server, mod, modMeta) => {
@@ -63,7 +64,8 @@ const appSchmea =  z.object({
   context: z.function().array().default([]),
   requestContext: z.function().array().default([]),
   handler: z.function().default(defaultHandler),
-  error: z.function().array().default([defaultErrorHandler])
+  error: z.function().array().default([defaultErrorHandler]),
+  healthcheck: z.function().array().default([])
 })
 
 const serverConfigSchema = z.object({
@@ -135,6 +137,7 @@ async function loadModule(
   Object.keys(validatedMod)
     .filter(key => typeof validatedMod[key] === 'function')
     .forEach(key => validatedMod[key].meta = { file: loadingModuleFile, name: key })
+
   moduleLogger.debug({ mod: inspect(validatedMod) }, 'module loaded')
   return validatedMod
 }
@@ -149,6 +152,7 @@ async function dynamicLoad(serverConfig: ServerConfig) {
     config: [],
     context: [],
     error: [],
+    healthcheck: [],
     handler: defaultHandler,
     requestContext: []
   }
@@ -187,6 +191,9 @@ async function startServer(serverConfig: ServerConfig) {
     const envConf = envDotProp.get(configPrefix) || {}
     const config = merge(envConfig, envConf)
     
+    const serverLogger = logger.child({ name: 'server' })
+    const app = await dynamicLoad(serverConfig)
+
     init({ appName: name, appVersion: 'dev' })
 
     let raio: Raio = {
@@ -208,19 +215,26 @@ async function startServer(serverConfig: ServerConfig) {
         this.context = merge(this.context, resolvedContext)
         serverLogger.debug({ resolvedContext, raio: this, fn: inspect(contextFn) }, 'context loaded')
       },
-      async check() {},
+      async healthcheck() {
+        const result = await Promise.allSettled(app.healthcheck.map(fn => fn(this)))
+
+        const kos = result.filter(r  => r.status === 'rejected')
+
+        if (kos.length === 0) { return { status: 'OK' } }
+
+        return {
+          status: 'KO',
+          errors: (kos as PromiseRejectedResult[]).map(ko => ko.reason)
+        }
+      },
       async inspect() {
         return {
           context: this.context,
-          config: this.config.store,
+          config: this.config,
           routes: this.routes
         }
       }
     }
-
-    const serverLogger = logger.child({ name: 'server' })
-
-    const app = await dynamicLoad(serverConfig)
 
     instrument(raio, { parentSpan: mainSpan, exclude: ['requestContext', 'error'] })
     instrument(app, { parentSpan: mainSpan })
@@ -354,7 +368,7 @@ async function startServer(serverConfig: ServerConfig) {
       has: (route: string) => {
         return !!router.lookup(route)
       },
-      check: () => raio.check(),
+      healthcheck: () => raio.healthcheck(),
       _router: router
     }
 
