@@ -1,5 +1,11 @@
-import { CallData, HandleFn } from "raio"
+import { CallContext, HandleFn } from "raio"
 
-export const handle: HandleFn = async (data: CallData) => {
-  data.output.body = { hello: 'world' }
+export const handle: HandleFn = async (data: CallContext) => {
+  return {
+    output: {
+      body: {
+        hello: 'world'
+      }
+    }
+  }
 }

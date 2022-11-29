@@ -7,8 +7,6 @@
   "dependencies": {
     "@silenteer/natsu": "^1.0.25",
     "@silenteer/natsu-type": "^0.0.12",
-    "raio": "workspace:^",
-    "raio.natsu": "workspace:^",
-    "raio.repl": "workspace:^"
+    "raio": "workspace:^"
   }
 }
