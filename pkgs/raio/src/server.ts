@@ -1,21 +1,19 @@
 require('esbuild-register')
 
-import path from "path"
-import glob from "glob"
-import { createRouter } from "radix3"
-import { z } from "zod"
-import { inspect } from "util"
-import { customAlphabet } from "nanoid"
-import { merge } from "./utils"
 import opentelemetry, { SpanKind, SpanStatusCode } from "@opentelemetry/api"
-
-import { CallContext, Router, ConfigFn, Raio, ContextFn, define, Handler } from "."
-import { logger } from "."
+import dotenv from "dotenv"
+import envDotProp from "env-dot-prop"
+import glob from "glob"
+import errors from 'http-errors'
+import { customAlphabet } from "nanoid"
+import path from "path"
+import { createRouter } from "radix3"
+import { inspect } from "util"
+import { z } from "zod"
+import { CallContext, ConfigFn, ContextFn, define, Handler, logger, Raio, Router } from "."
 import { createChildSpan, instrument } from "./instrument"
 import { init } from "./tracing"
-import errors from 'http-errors'
-import envDotProp from "env-dot-prop"
-import dotenv from "dotenv"
+import { merge } from "./utils"
 
 const tracer = opentelemetry.trace.getTracer('main')
 
@@ -45,20 +43,17 @@ export const defaultHandler = define.handler(async (server, mod, modMeta) => {
 
 export const defaultErrorHandler = define.error(async (e, callContext) => {
   if (errors.isHttpError(e) && e.statusCode !== 500) {
-    callContext.logger.info('route is ended with known http error')
     return {
       headers: {},
       code: e.statusCode,
       body: e
     }
   } else {
-    // unknown exception
-    callContext.logger.error(e, 'caught an unknown exception')
     return { headers: {}, code: e?.statusCode || 500, body: e }
   }
 })
 
-const appSchmea =  z.object({
+const appSchema =  z.object({
   adaptor: z.function().array().default([]),
   config: z.function().array().default([]),
   context: z.function().array().default([]),
@@ -74,10 +69,8 @@ const serverConfigSchema = z.object({
   routeDirs: z.string().array().default(['./routes']),
   preset: z.string().array().optional().default([]),
   execute: z.string().optional(),
-  executeArgs: z.preprocess(value => value && JSON.parse(value as string), z.object({
-    headers: z.record(z.string()).default({}),
-    body: z.any().optional()
-  })).optional(),
+  body: z.any().optional(),
+  headers: z.record(z.string()).default({}),
   configPrefix: z.string().default('raio'),
   env: z.string().default('.env')
 })
@@ -147,11 +140,11 @@ async function dynamicLoad(serverConfig: ServerConfig) {
   const dynamicLoadLogger = logger.child({ name: 'dynamicLoad' })
   dynamicLoadLogger.debug({ cwd, routeDirs, preset }, 'raio config')
   
-  let mod: z.infer<typeof appSchmea> = {
+  let mod: z.infer<typeof appSchema> = {
     adaptor: [],
     config: [],
     context: [],
-    error: [],
+    error: [defaultErrorHandler],
     healthcheck: [],
     handler: defaultHandler,
     requestContext: []
@@ -167,7 +160,7 @@ async function dynamicLoad(serverConfig: ServerConfig) {
 
   presetLogger.debug({ current: inspect(mod) }, 'preset module')
 
-  return appSchmea.parse(mod)
+  return appSchema.parse(mod)
 }
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvxyz', 6)
@@ -181,19 +174,28 @@ async function startServer(serverConfig: ServerConfig) {
   const mainSpan = tracer.startSpan('main')
 
   try {
-    const { cwd, routeDirs, execute, executeArgs, name, configPrefix, env } = serverConfigSchema.parse(serverConfig)
+    const { cwd, routeDirs, execute, body, headers, name, configPrefix, env } = serverConfigSchema.parse(serverConfig)
 
     const envConfig = dotenv.config({
         path: path.join(cwd, env)
       })
       .parsed || {}
 
+    Object.keys(envConfig).forEach(key => {
+      const value = envConfig[key]
+      delete envConfig[key]
+      const envKey = configPrefix.trim() === ''
+        ? key
+        : `${configPrefix}.${key}`
+      envDotProp.set(envKey, value)
+    })
+
     const envConf = envDotProp.get(configPrefix) || {}
     const config = merge(envConfig, envConf)
     
     const serverLogger = logger.child({ name: 'server' })
     const app = await dynamicLoad(serverConfig)
-
+    
     init({ appName: name, appVersion: 'dev' })
 
     let raio: Raio = {
@@ -201,13 +203,14 @@ async function startServer(serverConfig: ServerConfig) {
       context: {},
       routes: [],
       getConfig(path: string) {
-        return dotProp.getProperty(config, path)
+        return dotProp.getProperty(this.config, path)
       },
       async loadConfig(configFn?: ConfigFn<any>) {
         serverLogger.debug("start loading config")
-        const config = await configFn?.(this) || await Promise.resolve({})
+        const resolvedConfig = await configFn?.(this) || await Promise.resolve({})
+        this.config = merge(this.config, resolvedConfig)
 
-        serverLogger.debug({ config, raio: this, fn: inspect(configFn) }, 'config loaded')
+        serverLogger.debug({ resolvedConfig, config: this.config, fn: inspect(configFn) }, 'config loaded')
       },
       async loadContext(contextFn?: ContextFn<any>) {
         serverLogger.debug("start loading context")
@@ -260,9 +263,8 @@ async function startServer(serverConfig: ServerConfig) {
     const router = createRouter()
 
     const maybeRoutes = routeDirs.reduce((routes, nextPath) => {
-      const searchPath = path.join(cwd, nextPath)
-      const foundFiles = glob.sync('*.[j|t]s', { cwd: searchPath })
-      return [...routes, ...foundFiles.map(f => path.join(searchPath, f))]
+      const foundFiles = glob.sync(`${nextPath}/*.[j|t]s`, { cwd })
+      return [...routes, ...foundFiles]
     }, [])
 
     serverLogger.debug({ routes: maybeRoutes }, 'found files')
@@ -313,6 +315,8 @@ async function startServer(serverConfig: ServerConfig) {
         const callLogger = routeLogger.child({ name: callContext.id })
         callContext.logger = callLogger
 
+        callLogger.debug({ input: data, callContext }, 'incoming')
+
         try {
           routeSpan.setAttribute('id', callContext.id)
 
@@ -327,7 +331,7 @@ async function startServer(serverConfig: ServerConfig) {
           }
           requestContextSpan.end()
 
-          callLogger.debug('before calling')
+          callLogger.debug({input: callContext.input}, 'before calling')
 
           const resolvedCallContext = await routee.handle(callContext)
           routeSpan.addEvent('handler called')
@@ -337,8 +341,11 @@ async function startServer(serverConfig: ServerConfig) {
 
           routeSpan.end()
         } catch (e) {
+          callLogger.debug({ err: e}, 'handling')
           for (const errorFn of appForRoute.error) {
-            const errorOutput = await errorFn(callContext)
+            callLogger.debug('executing error fn')
+            const errorOutput = await errorFn(e, callContext)
+            callLogger.debug({ output: errorOutput }, 'error output value')
             callContext.output = merge(callContext.output, errorOutput)
           }
 
@@ -376,16 +383,17 @@ async function startServer(serverConfig: ServerConfig) {
 
     if (execute) {
       if (adaptorRouter.has(execute)) {
-        logger.debug('start execution %s', execute)
-
+        logger.debug('start execution [%s] - %s', execute, body)
+        
         const result = await adaptorRouter.call(
           execute,
-          executeArgs as any || { headers: {}, body: undefined }
+          { headers, body}
         )
         logger.debug({ output: result.output }, 'executed')
         console.log(JSON.stringify(result.output))
         process.exit(0)
       } else {
+        console.log(JSON.stringify({ output: { code: 404 }}))
         logger.error('cannot find route %s', execute)
         process.exit(1)
       }

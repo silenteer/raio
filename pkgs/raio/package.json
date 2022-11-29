@@ -44,12 +44,21 @@
     "@types/node": "^18.11.7"
   },
   "bin": "./dist/cli.js",
-  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./presets/fastify": "./dist/presets/fastify/index.js",
+    "./presets/natsu": "./dist/presets/natsu/index.js",
+    "./presets/repl": "./dist/presets/repl/index.js"
+  },
   "types": "./dist/index.d.ts",
   "scripts": {
     "prepare": "standard-version --path . -t raio/",
     "build:raio": "yarn build",
     "build": "pkgroll",
     "dev": "pkgroll -w"
+  },
+  "peerDependencies": {
+    "fastify": "*",
+    "nats": "*"
   }
 }

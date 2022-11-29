@@ -26,13 +26,6 @@ const optionDefinitions: OptionDefinition[] = [
 		defaultValue: process.cwd()
 	},
 	{
-		name: 'esbuild-register',
-		type: Boolean,
-		alias: 'r',
-		description: 'Enable esbuild-register to transform typescript automatically. Default true',
-		defaultValue: true
-	},
-	{
 		name: 'preset',
 		type: String,
 		multiple: true,
@@ -46,10 +39,16 @@ const optionDefinitions: OptionDefinition[] = [
 		description: 'execute one of those route, ignore all of adaptors'
 	},
 	{
-		name: 'executeArgs',
-		alias: 'g',
+		name: 'body',
+		alias: 'b',
 		type: String,
-		description: 'will be parsed as JSON. Only be processed if execute is defined. \n Must go in the format of { headers: ..., body: ...}'
+		description: 'will be parsed as JSON. Only be processed if execute is defined.'
+	},
+	{
+		name: 'headers',
+		alias: 'H',
+		type: String,
+		description: 'will be parsed as JSON. Only be processed if execute is defined. Expected a Record<string, string>'
 	},
 	{
 		name: 'name',
@@ -89,7 +88,8 @@ if (options.help) {
 			routeDirs: options.dir,
 			preset: options.preset ? options.preset : [],
 			execute: options.execute,
-			executeArgs: options.executeArgs,
+			body: options.body && JSON.parse(options.body),
+			headers: options.headers && JSON.parse(options.headers),
 			configPrefix: options['config-prefix'],
 			env: options.env,
 		})

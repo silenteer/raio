@@ -1,1 +1,0 @@
-import { startServer } from "../src/server";

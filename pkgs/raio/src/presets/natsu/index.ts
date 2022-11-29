@@ -3,7 +3,7 @@ import { NatsService } from "@silenteer/natsu-type"
 import { connect, JSONCodec, MsgHdrsImpl, NatsConnection } from "nats"
 import { MsgImpl } from "nats/lib/nats-base-client/msg"
 import { decode, encode } from "nats/lib/nats-base-client/encoders"
-import { logger, define, inferDefine, errors } from "raio"
+import { logger, define, inferDefine, errors } from "../../"
 import { z } from "zod"
 
 const natsuLogger = logger.child({ name: 'natsu' })
