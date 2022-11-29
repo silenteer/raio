@@ -1758,7 +1758,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn-walk@npm:^8.1.1":
+"acorn-walk@npm:^8.1.1, acorn-walk@npm:^8.2.0":
   version: 8.2.0
   resolution: "acorn-walk@npm:8.2.0"
   checksum: 1715e76c01dd7b2d4ca472f9c58968516a4899378a63ad5b6c2d668bba8da21a71976c14ec5f5b75f887b6317c4ae0b897ab141c831d741dc76024d8745f1ad1
@@ -1976,19 +1976,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"basic@workspace:examples/component":
-  version: 0.0.0-use.local
-  resolution: "basic@workspace:examples/component"
-  dependencies:
-    fastify: ^4.9.2
-    nats: ^2.8.0
-    raio: "workspace:^"
-    tsx: ^3.11.0
-    typescript: beta
-    zod: ^3.19.1
-  languageName: unknown
-  linkType: soft
-
 "bl@npm:^4.1.0":
   version: 4.1.0
   resolution: "bl@npm:4.1.0"
@@ -2153,6 +2140,13 @@ __metadata:
     ansi-styles: ^4.1.0
     supports-color: ^7.1.0
   checksum: fe75c9d5c76a7a98d45495b91b2172fa3b7a09e0cc9370e5c8feb1c567b85c4288e2b3fded7cfdd7359ac28d6b3844feb8b82b8686842e93d23c827c417e83fc
+  languageName: node
+  linkType: hard
+
+"chalk@npm:^5.1.2":
+  version: 5.1.2
+  resolution: "chalk@npm:5.1.2"
+  checksum: 804d7485e33531abe45b14e91026ceb5615974a8c04259ab0806f214a7666f6ea03e39ab124f7d5a0c78a83fda89005f236db3c5f10c2abe9ae875f7aa56bcb5
   languageName: node
   linkType: hard
 
@@ -4754,8 +4748,6 @@ __metadata:
     "@silenteer/natsu": ^1.0.25
     "@silenteer/natsu-type": ^0.0.12
     raio: "workspace:^"
-    raio.natsu: "workspace:^"
-    raio.repl: "workspace:^"
   languageName: unknown
   linkType: soft
 
@@ -5271,7 +5263,6 @@ __metadata:
     fastify: ^4.9.2
     nats: ^2.8.0
     raio: "workspace: *"
-    raio.fastify: "workspace: *"
     tsx: ^3.11.0
     zod: ^3.19.1
   languageName: unknown
@@ -5360,45 +5351,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"raio.fastify@workspace: *, raio.fastify@workspace:^, raio.fastify@workspace:presets/fastify":
-  version: 0.0.0-use.local
-  resolution: "raio.fastify@workspace:presets/fastify"
-  dependencies:
-    pkgroll: ^1.4.0
-  peerDependencies:
-    fastify: ^4.9.2
-    raio: "*"
-    zod: ^3.19.1
-  languageName: unknown
-  linkType: soft
-
-"raio.natsu@workspace:^, raio.natsu@workspace:presets/natsu":
-  version: 0.0.0-use.local
-  resolution: "raio.natsu@workspace:presets/natsu"
-  dependencies:
-    "@opentelemetry/api": ^1.3.0
-    "@silenteer/natsu": ^1.0.25
-    "@silenteer/natsu-type": ^0.0.12
-    pkgroll: ^1.4.0
-    standard-version: ^9.5.0
-  peerDependencies:
-    nats: ^2.8.0
-    raio: ^2
-    zod: ^3.19.1
-  languageName: unknown
-  linkType: soft
-
-"raio.repl@workspace:^, raio.repl@workspace:presets/repl":
-  version: 0.0.0-use.local
-  resolution: "raio.repl@workspace:presets/repl"
-  dependencies:
-    pkgroll: ^1.4.0
-    raio: ^2
-    standard-version: ^9.5.0
-  languageName: unknown
-  linkType: soft
-
-"raio@^2, raio@workspace: *, raio@workspace:^, raio@workspace:pkgs/raio":
+"raio@workspace: *, raio@workspace:^, raio@workspace:pkgs/raio":
   version: 0.0.0-use.local
   resolution: "raio@workspace:pkgs/raio"
   dependencies:
@@ -5438,6 +5391,9 @@ __metadata:
     typescript: ^4.8.4
     vitest: ^0.24.3
     zod: ^3.19.1
+  peerDependencies:
+    fastify: "*"
+    nats: "*"
   bin:
     raio: ./dist/cli.js
   languageName: unknown
@@ -6168,14 +6124,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "tests@workspace:tests"
   dependencies:
+    chalk: ^5.1.2
     execa: ^6.1.0
     nats: ^2.9.0
     raio: "workspace:^"
-    raio.fastify: "workspace:^"
-    raio.natsu: "workspace:^"
     tsx: ^3.11.0
     typescript: ^4.8.4
-    vitest: ^0.24.5
+    vitest: ^0.25.2
+    zod: ^3.19.1
   languageName: unknown
   linkType: soft
 
@@ -6416,16 +6372,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:beta":
-  version: 4.9.1-beta
-  resolution: "typescript@npm:4.9.1-beta"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: db7be9894e8809c3ddea07eb41730c6211929f4f9f388a148354b9ce5f872aea3a86bc20a1cf6277dae7afddc813520e268f5096f6e5befaac705bb8a97d61ea
-  languageName: node
-  linkType: hard
-
 "typescript@patch:typescript@^4.6.4#~builtin<compat/typescript>, typescript@patch:typescript@^4.8.4#~builtin<compat/typescript>":
   version: 4.8.4
   resolution: "typescript@patch:typescript@npm%3A4.8.4#~builtin<compat/typescript>::version=4.8.4&hash=701156"
@@ -6433,16 +6379,6 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 301459fc3eb3b1a38fe91bf96d98eb55da88a9cb17b4ef80b4d105d620f4d547ba776cc27b44cc2ef58b66eda23fe0a74142feb5e79a6fb99f54fc018a696afa
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@beta#~builtin<compat/typescript>":
-  version: 4.9.1-beta
-  resolution: "typescript@patch:typescript@npm%3A4.9.1-beta#~builtin<compat/typescript>::version=4.9.1-beta&hash=701156"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 2aa62468590ede8380736c1e23c35073195d30523bd0f39e527252f080057f18706bb9f2aef55d32909633db81845137ce8b634ba1887b4ed33ff2e6cdbc063f
   languageName: node
   linkType: hard
 
@@ -6600,16 +6536,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vitest@npm:^0.24.5":
-  version: 0.24.5
-  resolution: "vitest@npm:0.24.5"
+"vitest@npm:^0.25.2":
+  version: 0.25.3
+  resolution: "vitest@npm:0.25.3"
   dependencies:
     "@types/chai": ^4.3.3
     "@types/chai-subset": ^1.3.3
     "@types/node": "*"
+    acorn: ^8.8.0
+    acorn-walk: ^8.2.0
     chai: ^4.3.6
     debug: ^4.3.4
     local-pkg: ^0.4.2
+    source-map: ^0.6.1
     strip-literal: ^0.4.2
     tinybench: ^2.3.1
     tinypool: ^0.3.0
@@ -6634,7 +6573,7 @@ __metadata:
       optional: true
   bin:
     vitest: vitest.mjs
-  checksum: 801d153082ec9d237d8720783dc939aa8c8a4cdd71625ddac997f99a98664b055a0e3efbcb3af648d44f0b8b80c014d48150b2c281870023628c1bdffa336d08
+  checksum: cd54de758f41295ef8a5304318b0de37f3182ec9b179d983cb0199dac89d51b80ee30124754703ef77ce4a1b675f3b02094ef96790889d5c9212dbab7490b4d0
   languageName: node
   linkType: hard
 
