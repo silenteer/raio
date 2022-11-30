@@ -1,9 +1,9 @@
-import { Resource } from "@opentelemetry/resources"
-import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions"
-import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node"
-import { registerInstrumentations } from "@opentelemetry/instrumentation"
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
+import { registerInstrumentations } from "@opentelemetry/instrumentation"
+import { Resource } from "@opentelemetry/resources"
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node"
+import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions"
 
 export type TracingOptions = {
   appName: string
