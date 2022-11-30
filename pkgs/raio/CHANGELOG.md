@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 1.1.0 (2022-11-30)
+
+
+### Features
+
+* added config loader via env ([eb587b8](https://github.com/silenteer/raio/commit/eb587b84001770be513d654917bf9fa9e99390cb))
+* added healthcheck ([10ee353](https://github.com/silenteer/raio/commit/10ee35388675cc4bcfef5ffff75967d96d6b4f6e))
+
 ### [1.0.1](https://github.com/silenteer/raio/compare/raio/1.0.1...raio/1.0.1) (2022-11-30)
 
 ### [1.0.1](https://github.com/silenteer/raio/compare/raio/2.2.1...raio/1.0.1) (2022-11-30)
