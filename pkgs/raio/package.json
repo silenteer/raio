@@ -1,6 +1,6 @@
 {
   "name": "@raio/server",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "author": "Silentium Private Limited",
   "license": "MIT",
   "dependencies": {
@@ -48,7 +48,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "prepare": "standard-version --path . -t raio/",
+    "_prepare": "standard-version --path . -t raio/",
     "build": "yarn run -T tsup"
   },
   "tsup": {
