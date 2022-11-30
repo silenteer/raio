@@ -2,7 +2,7 @@
   "name": "tests",
   "packageManager": "yarn@3.2.4",
   "dependencies": {
-    "@raio/server": "workspace:^",
+    "@subsystem/server": "workspace:^",
     "chalk": "^5.1.2",
     "execa": "^6.1.0",
     "nats": "^2.9.0",

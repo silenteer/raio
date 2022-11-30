@@ -1108,82 +1108,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@raio/fastify@workspace:pkgs/preset.fastify":
-  version: 0.0.0-use.local
-  resolution: "@raio/fastify@workspace:pkgs/preset.fastify"
-  dependencies:
-    "@raio/server": "workspace:^"
-    fastify: "*"
-    zod: "*"
-  languageName: unknown
-  linkType: soft
-
-"@raio/natsu@workspace:^, @raio/natsu@workspace:pkgs/preset.natsu":
-  version: 0.0.0-use.local
-  resolution: "@raio/natsu@workspace:pkgs/preset.natsu"
-  dependencies:
-    "@raio/server": "workspace:^"
-    "@silenteer/natsu": ^1.0.25
-    "@silenteer/natsu-type": ^0.0.12
-    nats: ^2
-    zod: "*"
-  languageName: unknown
-  linkType: soft
-
-"@raio/repl@workspace:pkgs/preset.repl":
-  version: 0.0.0-use.local
-  resolution: "@raio/repl@workspace:pkgs/preset.repl"
-  peerDependencies:
-    "@raio/server": "workspace:^"
-  languageName: unknown
-  linkType: soft
-
-"@raio/server@workspace:^, @raio/server@workspace:pkgs/raio":
-  version: 0.0.0-use.local
-  resolution: "@raio/server@workspace:pkgs/raio"
-  dependencies:
-    "@opentelemetry/api": ^1.3.0
-    "@opentelemetry/auto-instrumentations-node": ^0.34.0
-    "@opentelemetry/exporter-trace-otlp-http": ^0.34.0
-    "@opentelemetry/exporter-zipkin": ^1.8.0
-    "@opentelemetry/instrumentation": ^0.34.0
-    "@opentelemetry/resources": ^1.8.0
-    "@opentelemetry/sdk-trace-base": ^1.8.0
-    "@opentelemetry/sdk-trace-node": ^1.8.0
-    "@opentelemetry/semantic-conventions": ^1.8.0
-    "@types/command-line-args": ^5.2.0
-    "@types/command-line-usage": ^5.0.2
-    "@types/glob": ^8.0.0
-    "@types/http-errors": ^2.0.1
-    "@types/lodash.merge": ^4.6.7
-    "@types/node": ^18.11.7
-    "@types/shimmer": ^1.0.2
-    command-line-args: ^5.2.1
-    command-line-usage: ^6.1.3
-    dot-prop: ^7.2.0
-    dotenv: ^16.0.3
-    env-dot-prop: ^3.0.0
-    esbuild: ^0.15.12
-    esbuild-register: ^3.3.3
-    glob: ^8.0.3
-    http-errors: ^2.0.0
-    lodash.mergewith: ^4.6.2
-    nanoid: 3
-    pino: ^8.7.0
-    pkgroll: ^1.4.0
-    radix3: ^0.2.1
-    shimmer: ^1.2.1
-    standard-version: ^9.5.0
-    ts-toolbelt: ^9.6.0
-    tsup: ^6.5.0
-    typescript: ^4.8.4
-    vitest: ^0.24.3
-    zod: ^3.19.1
-  bin:
-    server: ./dist/cli.js
-  languageName: unknown
-  linkType: soft
-
 "@rollup/plugin-alias@npm:^3.1.9":
   version: 3.1.9
   resolution: "@rollup/plugin-alias@npm:3.1.9"
@@ -1326,6 +1250,82 @@ __metadata:
   checksum: 7e08fcc8a74b5c6945f857ca0c6c1c8638e8868137538e5d8629cf11b6f5477487bd372f8960269993433a0680f3fc0c6213fca7322e636fc56cd342688c4c0e
   languageName: node
   linkType: hard
+
+"@subsystem/fastify@workspace:pkgs/preset.fastify":
+  version: 0.0.0-use.local
+  resolution: "@subsystem/fastify@workspace:pkgs/preset.fastify"
+  dependencies:
+    "@subsystem/server": "workspace:^"
+    fastify: "*"
+    zod: "*"
+  languageName: unknown
+  linkType: soft
+
+"@subsystem/natsu@workspace:^, @subsystem/natsu@workspace:pkgs/preset.natsu":
+  version: 0.0.0-use.local
+  resolution: "@subsystem/natsu@workspace:pkgs/preset.natsu"
+  dependencies:
+    "@silenteer/natsu": ^1.0.25
+    "@silenteer/natsu-type": ^0.0.12
+    "@subsystem/server": "workspace:^"
+    nats: ^2
+    zod: "*"
+  languageName: unknown
+  linkType: soft
+
+"@subsystem/repl@workspace:pkgs/preset.repl":
+  version: 0.0.0-use.local
+  resolution: "@subsystem/repl@workspace:pkgs/preset.repl"
+  peerDependencies:
+    "@subsystem/server": "workspace:^"
+  languageName: unknown
+  linkType: soft
+
+"@subsystem/server@workspace:^, @subsystem/server@workspace:pkgs/subsystem":
+  version: 0.0.0-use.local
+  resolution: "@subsystem/server@workspace:pkgs/subsystem"
+  dependencies:
+    "@opentelemetry/api": ^1.3.0
+    "@opentelemetry/auto-instrumentations-node": ^0.34.0
+    "@opentelemetry/exporter-trace-otlp-http": ^0.34.0
+    "@opentelemetry/exporter-zipkin": ^1.8.0
+    "@opentelemetry/instrumentation": ^0.34.0
+    "@opentelemetry/resources": ^1.8.0
+    "@opentelemetry/sdk-trace-base": ^1.8.0
+    "@opentelemetry/sdk-trace-node": ^1.8.0
+    "@opentelemetry/semantic-conventions": ^1.8.0
+    "@types/command-line-args": ^5.2.0
+    "@types/command-line-usage": ^5.0.2
+    "@types/glob": ^8.0.0
+    "@types/http-errors": ^2.0.1
+    "@types/lodash.merge": ^4.6.7
+    "@types/node": ^18.11.7
+    "@types/shimmer": ^1.0.2
+    command-line-args: ^5.2.1
+    command-line-usage: ^6.1.3
+    dot-prop: ^7.2.0
+    dotenv: ^16.0.3
+    env-dot-prop: ^3.0.0
+    esbuild: ^0.15.12
+    esbuild-register: ^3.3.3
+    glob: ^8.0.3
+    http-errors: ^2.0.0
+    lodash.mergewith: ^4.6.2
+    nanoid: 3
+    pino: ^8.7.0
+    pkgroll: ^1.4.0
+    radix3: ^0.2.1
+    shimmer: ^1.2.1
+    standard-version: ^9.5.0
+    ts-toolbelt: ^9.6.0
+    tsup: ^6.5.0
+    typescript: ^4.8.4
+    vitest: ^0.24.3
+    zod: ^3.19.1
+  bin:
+    server: ./dist/cli.js
+  languageName: unknown
+  linkType: soft
 
 "@tootallnate/once@npm:2":
   version: 2.0.0
@@ -5357,9 +5357,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "natsu@workspace:examples/natsu"
   dependencies:
-    "@raio/server": "workspace:^"
     "@silenteer/natsu": ^1.0.25
     "@silenteer/natsu-type": ^0.0.12
+    "@subsystem/server": "workspace:^"
   languageName: unknown
   linkType: soft
 
@@ -5920,8 +5920,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "preset@workspace:examples/preset"
   dependencies:
-    "@raio/natsu": "workspace:^"
-    "@raio/server": "workspace:^"
+    "@subsystem/natsu": "workspace:^"
+    "@subsystem/server": "workspace:^"
     esbuild-register: ^3.4.1
     fastify: ^4.9.2
     nats: ^2.8.0
@@ -6812,7 +6812,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "tests@workspace:tests"
   dependencies:
-    "@raio/server": "workspace:^"
+    "@subsystem/server": "workspace:^"
     chalk: ^5.1.2
     execa: ^6.1.0
     nats: ^2.9.0

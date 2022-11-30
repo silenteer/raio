@@ -1,5 +1,5 @@
 {
-  "name": "@raio/server",
+  "name": "@subsystem/server",
   "version": "1.0.0",
   "author": "Silentium Private Limited",
   "license": "MIT",
@@ -48,7 +48,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "_prepare": "standard-version --path . -t raio/",
+    "_prepare": "standard-version --path . -t subsystem/",
     "build": "yarn run -T tsup"
   },
   "tsup": {

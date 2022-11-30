@@ -1,5 +1,5 @@
 {
-  "name": "@raio/natsu",
+  "name": "@subsystem/natsu",
   "version": "0.1.0",
   "packageManager": "yarn@3.2.4",
   "main": "./dist/index.js",
@@ -8,9 +8,9 @@
     "build": "yarn run -T tsup"
   },
   "dependencies": {
-    "@raio/server": "workspace:^",
     "@silenteer/natsu": "^1.0.25",
     "@silenteer/natsu-type": "^0.0.12",
+    "@subsystem/server": "workspace:^",
     "nats": "^2",
     "zod": "*"
   },

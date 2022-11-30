@@ -1,4 +1,4 @@
-import { define, errors, inferDefine, logger } from "@raio/server"
+import { define, errors, inferDefine, logger } from "@subsystem/server"
 import { NatsAuthorizationInjection, NatsAuthorize, NatsHandle, NatsHandleInjection, NatsHandler, NatsInjection, NatsValidate, NatsValidationInjection } from "@silenteer/natsu"
 import { NatsService } from "@silenteer/natsu-type"
 import { connect, JSONCodec, MsgHdrsImpl, NatsConnection } from "nats"

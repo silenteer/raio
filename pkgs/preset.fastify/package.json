@@ -1,5 +1,5 @@
 {
-  "name": "@raio/fastify",
+  "name": "@subsystem/fastify",
   "version": "0.1.0",
   "packageManager": "yarn@3.2.4",
   "main": "./dist/index.js",
@@ -8,7 +8,7 @@
     "build": "yarn run -T tsup"
   },
   "dependencies": {
-    "@raio/server": "workspace:^",
+    "@subsystem/server": "workspace:^",
     "fastify": "*",
     "zod": "*"
   },

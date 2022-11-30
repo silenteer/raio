@@ -2,11 +2,11 @@
   "name": "natsu",
   "packageManager": "yarn@3.2.4",
   "scripts": {
-    "run": "raio -p raio.natsu"
+    "run": "subsystem -p subsystem.natsu"
   },
   "dependencies": {
-    "@raio/server": "workspace:^",
     "@silenteer/natsu": "^1.0.25",
-    "@silenteer/natsu-type": "^0.0.12"
+    "@silenteer/natsu-type": "^0.0.12",
+    "@subsystem/server": "workspace:^"
   }
 }

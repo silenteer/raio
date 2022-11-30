@@ -11,7 +11,7 @@ import path from "path"
 import { createRouter } from "radix3"
 import { inspect } from "util"
 import { z } from "zod"
-import { CallContext, ConfigFn, ContextFn, define, Handler, logger, Raio, Router } from "."
+import { CallContext, ConfigFn, ContextFn, define, Handler, logger, subsystem, Router } from "."
 import { createChildSpan, instrument } from "./instrument"
 import { init } from "./tracing"
 import { merge } from "./utils"
@@ -72,7 +72,7 @@ const serverConfigSchema = z.object({
   execute: z.string().optional(),
   body: z.any().optional(),
   headers: z.record(z.string()).default({}),
-  configPrefix: z.string().default('raio'),
+  configPrefix: z.string().default('subsystem'),
   env: z.string().default('.env')
 })
 
@@ -139,7 +139,7 @@ async function loadModule(
 async function dynamicLoad(serverConfig: ServerConfig) {
   const { cwd, routeDirs, preset } = serverConfig
   const dynamicLoadLogger = logger.child({ name: 'dynamicLoad' })
-  dynamicLoadLogger.debug({ cwd, routeDirs, preset }, 'raio config')
+  dynamicLoadLogger.debug({ cwd, routeDirs, preset }, 'subsystem config')
   
   let mod: z.infer<typeof appSchema> = {
     adaptor: [],
@@ -199,7 +199,7 @@ async function startServer(serverConfig: ServerConfig) {
     
     init({ appName: name, appVersion: 'dev' })
 
-    let raio: Raio = {
+    let subsystem: subsystem = {
       config,
       context: {},
       routes: [],
@@ -217,7 +217,7 @@ async function startServer(serverConfig: ServerConfig) {
         serverLogger.debug("start loading context")
         const resolvedContext = await contextFn?.(this) || {}
         this.context = merge(this.context, resolvedContext)
-        serverLogger.debug({ resolvedContext, raio: this, fn: inspect(contextFn) }, 'context loaded')
+        serverLogger.debug({ resolvedContext, subsystem: this, fn: inspect(contextFn) }, 'context loaded')
       },
       async healthcheck() {
         const result = await Promise.allSettled(app.healthcheck.map(fn => fn(this)))
@@ -240,14 +240,14 @@ async function startServer(serverConfig: ServerConfig) {
       }
     }
 
-    instrument(raio, { parentSpan: mainSpan, exclude: ['requestContext', 'error'] })
+    instrument(subsystem, { parentSpan: mainSpan, exclude: ['requestContext', 'error'] })
     instrument(app, { parentSpan: mainSpan })
 
     const configSpan = createChildSpan('config', mainSpan)
     instrument(app.config, { parentSpan: configSpan })
 
     await app.config.reduce(async (_, nextFn) => {
-      await raio.loadConfig(nextFn)
+      await subsystem.loadConfig(nextFn)
     }, Promise.resolve())
 
     configSpan.end()
@@ -256,7 +256,7 @@ async function startServer(serverConfig: ServerConfig) {
     instrument(app.context, { parentSpan: contextSpan })
     
     await app.context.reduce(async (_, nextFn) => {
-      await raio.loadContext(nextFn)
+      await subsystem.loadContext(nextFn)
     }, Promise.resolve())
 
     contextSpan.end()
@@ -282,7 +282,7 @@ async function startServer(serverConfig: ServerConfig) {
       routeLogger.debug({ modMetadata })
 
       routeLogger.debug("start resolve handle")
-      const handler = await app.handler(raio, mod, modMetadata) as Handler
+      const handler = await app.handler(subsystem, mod, modMetadata) as Handler
       routeLogger.debug({ handler }, "route config resolved")
 
       const caller = async (data?: CallContext['input'], callConfig?: Record<string, any>) => {
@@ -302,9 +302,9 @@ async function startServer(serverConfig: ServerConfig) {
 
         let callContext: CallContext = {
           id: callConfig?.['id'] || nanoid(),
-          server: raio,
-          config: raio.config,
-          context: merge(raio.context, callConfig),
+          server: subsystem,
+          config: subsystem.config,
+          context: merge(subsystem.context, callConfig),
           input: data || { headers: {}, body: undefined },
           output: { headers: {}, body: undefined, code: 200 }, //mimic http status 
           instrument(target, ...args) {
@@ -376,7 +376,7 @@ async function startServer(serverConfig: ServerConfig) {
       has: (route: string) => {
         return !!router.lookup(route)
       },
-      healthcheck: () => raio.healthcheck(),
+      healthcheck: () => subsystem.healthcheck(),
       _router: router
     }
 
@@ -400,7 +400,7 @@ async function startServer(serverConfig: ServerConfig) {
       }
     } else if (app.adaptor.length > 0) {
       serverLogger.info("Triggering adaptors")
-      app.adaptor.forEach(adaptorFn => adaptorFn(raio, adaptorRouter))
+      app.adaptor.forEach(adaptorFn => adaptorFn(subsystem, adaptorRouter))
     } else {
       serverLogger.info("There's nothign to process further, exiting")
       process.exit(0)

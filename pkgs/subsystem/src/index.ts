@@ -22,21 +22,21 @@ export type CallContext = {
   input: { headers: Dictionary<string>, body: any }
   output: { headers: Dictionary<string>, body: any, code: number }
   error?: any
-  server: Raio
+  server: subsystem
   logger: pino.BaseLogger
   instrument(target: any, ...args: any[]): void // intentionally not setting it to be too strict
 }
 
-export type ConfigFn<T extends Dictionary> = (server: Raio) => Promise<T> | T
-export type ContextFn<T extends Dictionary> = (server: Raio) => Promise<T> | T
-export type HealthCheckFn = (server: Raio) => Promise<void> | void
+export type ConfigFn<T extends Dictionary> = (server: subsystem) => Promise<T> | T
+export type ContextFn<T extends Dictionary> = (server: subsystem) => Promise<T> | T
+export type HealthCheckFn = (server: subsystem) => Promise<void> | void
 
 export type HealtcheckResult = {
   status: 'OK' | 'KO',
   errors?: any[]
 }
 
-export type Raio = {
+export type subsystem = {
   config: Dictionary
   context: Dictionary
   routes: Array<any>
@@ -58,13 +58,13 @@ export type HandleFn = (data: CallContext) => Promise<HandleReturnType> | Handle
 
 export type ModMetadata = { name: string } & Record<string, any>
 
-export type HandlerFn = (server: Raio, mod: any, meta: ModMetadata) => Promise<Handler> | Handler
+export type HandlerFn = (server: subsystem, mod: any, meta: ModMetadata) => Promise<Handler> | Handler
 export type Handler = {
   metadata: { name: string } & Record<string, any>
   handle: HandleFn
 }
 
-export type AdaptorFn = (server: Raio, router: Router) => Promise<void>
+export type AdaptorFn = (server: subsystem, router: Router) => Promise<void>
 export type ErrorFn = (error: any, data: CallContext) => Promise<CallContext['output'] | void>
 
 export type Router = {
@@ -74,8 +74,8 @@ export type Router = {
   _router: RadixRouter
 }
 
-export function defineConfig<T extends Dictionary>(configFn: (server: Raio) => Promise<T> | T): ConfigFn<T> { return configFn }
-export function defineContext<T extends Dictionary>(contextFn: (server: Raio) => Promise<T> | T): ContextFn<T> { return contextFn }
+export function defineConfig<T extends Dictionary>(configFn: (server: subsystem) => Promise<T> | T): ConfigFn<T> { return configFn }
+export function defineContext<T extends Dictionary>(contextFn: (server: subsystem) => Promise<T> | T): ContextFn<T> { return contextFn }
 
 export function defineRequestContext<T extends Dictionary>(requestFn: RequestContextFn<T>) { return requestFn }
 export function defineHandler(handlerFn: HandlerFn) { return handlerFn }

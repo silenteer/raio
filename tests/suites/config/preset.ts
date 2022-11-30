@@ -1,4 +1,4 @@
-import { define } from "@raio/server"
+import { define } from "@subsystem/server"
 
 export const config = define.config(async () => {
   return {

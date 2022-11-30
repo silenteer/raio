@@ -1,6 +1,6 @@
 import { z } from "zod"
 import fastify from "fastify"
-import { CallContext, define, inferDefine } from "@raio/server"
+import { CallContext, define, inferDefine } from "@subsystem/server"
 
 const configSchema = z.object({
   port: z.number().default(3000)
@@ -12,10 +12,10 @@ export const config = define.config(() => {
   })
 })
 
-export type RaioFastifyConfig = inferDefine<typeof config>
+export type subsystemFastifyConfig = inferDefine<typeof config>
 
-export const adaptor = define.adaptor(async (raio, router) => {
-  const config = configSchema.parse(raio.config)
+export const adaptor = define.adaptor(async (subsystem, router) => {
+  const config = configSchema.parse(subsystem.config)
   const server = fastify({ logger: true })
 
   server.get('/*', async (req, rep) => {

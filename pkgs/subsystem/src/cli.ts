@@ -58,7 +58,7 @@ const optionDefinitions: OptionDefinition[] = [
 	{
 		name: 'config-prefix',
 		type: String,
-		description: 'prefix for environemnt-based configuration loading. Default RAIO'
+		description: 'prefix for environemnt-based configuration loading. Default subsystem'
 	},
 	{
 		name: 'env',
@@ -72,7 +72,7 @@ if (options.help) {
 	const usage = commandLineUsage([
 		{
 			header: 'Usage',
-			content: 'raio <entry dir>'
+			content: 'subsystem <entry dir>'
 		},
 		{
 			header: 'Options',
