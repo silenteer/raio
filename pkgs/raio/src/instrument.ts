@@ -1,4 +1,4 @@
-import { massWrap, wrap, unwrap } from "shimmer"
+import { wrap } from "shimmer"
 import util from "util"
 import opentelemetry, { Context, Span, SpanOptions, SpanStatusCode } from "@opentelemetry/api"
 

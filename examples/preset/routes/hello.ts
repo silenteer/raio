@@ -1,4 +1,4 @@
-import { CallContext, HandleFn } from "raio"
+import { CallContext, HandleFn } from "@raio/server"
 
 export const handle: HandleFn = async (data: CallContext) => {
   return {

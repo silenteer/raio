@@ -1,4 +1,5 @@
-require('esbuild-register')
+import { register } from 'esbuild-register/dist/node'
+register({})
 
 import opentelemetry, { SpanKind, SpanStatusCode } from "@opentelemetry/api"
 import dotenv from "dotenv"
@@ -276,7 +277,7 @@ async function startServer(serverConfig: ServerConfig) {
       const modulePath = path.resolve(cwd, maybeRoute)
       routeLogger.debug({ modulePath }, 'start loading route')
 
-      const mod = await import(modulePath)
+      const mod = require(modulePath)
       const modMetadata = { path: maybeRoute, name: path.basename(maybeRoute, path.extname(maybeRoute)) }
       routeLogger.debug({ modMetadata })
 

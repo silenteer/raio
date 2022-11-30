@@ -1,6 +1,6 @@
 import { z } from "zod"
 import fastify from "fastify"
-import { CallContext, define, inferDefine } from "../.."
+import { CallContext, define, inferDefine } from "@raio/server"
 
 const configSchema = z.object({
   port: z.number().default(3000)

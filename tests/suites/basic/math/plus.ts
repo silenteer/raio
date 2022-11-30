@@ -1,4 +1,4 @@
-import { define } from "raio"
+import { define } from "@raio/server"
 import { z } from "zod"
 
 const inputSchema = z.object({

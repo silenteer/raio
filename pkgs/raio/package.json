@@ -1,7 +1,7 @@
 {
-  "name": "raio",
-  "version": "2.2.1",
-  "author": "Duke",
+  "name": "@raio/server",
+  "version": "1.0.0",
+  "author": "Silentium Private Limited",
   "license": "MIT",
   "dependencies": {
     "@opentelemetry/api": "^1.3.0",
@@ -31,6 +31,7 @@
     "shimmer": "^1.2.1",
     "standard-version": "^9.5.0",
     "ts-toolbelt": "^9.6.0",
+    "tsup": "^6.5.0",
     "typescript": "^4.8.4",
     "vitest": "^0.24.3",
     "zod": "^3.19.1"
@@ -44,21 +45,19 @@
     "@types/node": "^18.11.7"
   },
   "bin": "./dist/cli.js",
-  "exports": {
-    ".": "./dist/index.js",
-    "./presets/fastify": "./dist/presets/fastify/index.js",
-    "./presets/natsu": "./dist/presets/natsu/index.js",
-    "./presets/repl": "./dist/presets/repl/index.js"
-  },
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "prepare": "standard-version --path . -t raio/",
-    "build:raio": "yarn build",
-    "build": "pkgroll",
-    "dev": "pkgroll -w"
+    "build": "yarn run -T tsup"
   },
-  "peerDependencies": {
-    "fastify": "*",
-    "nats": "*"
+  "tsup": {
+    "entry": [
+      "src/index.ts",
+      "src/cli.ts"
+    ],
+    "sourcemap": true,
+    "clean": true,
+    "dts": true
   }
 }

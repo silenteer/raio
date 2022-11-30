@@ -5,8 +5,8 @@
     "run": "raio -p raio.natsu"
   },
   "dependencies": {
+    "@raio/server": "workspace:^",
     "@silenteer/natsu": "^1.0.25",
-    "@silenteer/natsu-type": "^0.0.12",
-    "raio": "workspace:^"
+    "@silenteer/natsu-type": "^0.0.12"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "name": "@raio/repl",
+  "version": "0.1.0",
+  "packageManager": "yarn@3.2.4",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "yarn run -T tsup"
+  },
+  "peerDependencies": {
+    "@raio/server": "workspace:^"
+  }
+}

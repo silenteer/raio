@@ -1,4 +1,4 @@
-import { define } from "../../"
+import { define } from "@raio/server"
 
 import repl from "repl"
 

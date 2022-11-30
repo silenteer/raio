@@ -1,0 +1,25 @@
+{
+  "name": "@raio/natsu",
+  "version": "0.1.0",
+  "packageManager": "yarn@3.2.4",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "yarn run -T tsup"
+  },
+  "dependencies": {
+    "@raio/server": "workspace:^",
+    "@silenteer/natsu": "^1.0.25",
+    "@silenteer/natsu-type": "^0.0.12",
+    "nats": "^2",
+    "zod": "*"
+  },
+  "tsup": {
+    "entry": [
+      "index.ts"
+    ],
+    "sourcemap": true,
+    "clean": true,
+    "dts": true
+  }
+}

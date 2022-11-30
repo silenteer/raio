@@ -1,4 +1,4 @@
-import { define } from "raio"
+import { define } from "@raio/server"
 
 export default define.handle(async (callContext) => {
   console.log(callContext.server.getConfig('more'))
