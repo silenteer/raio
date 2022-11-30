@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.1](https://github.com/silenteer/raio/compare/raio/1.0.1...raio/1.0.1) (2022-11-30)
+
 ### [1.0.1](https://github.com/silenteer/raio/compare/raio/2.2.1...raio/1.0.1) (2022-11-30)
 
 ### [2.2.1](https://github.com/silenteer/raio/compare/raio/2.2.0...raio/2.2.1) (2022-11-29)
