@@ -654,7 +654,7 @@ __metadata:
     vitest: ^0.24.3
     zod: ^3.19.1
   bin:
-    server: ./dist/cli.js
+    subsystem: ./dist/cli.js
   languageName: unknown
   linkType: soft
 
