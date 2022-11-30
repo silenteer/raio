@@ -1,6 +1,6 @@
 {
   "name": "@raio/server",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "author": "Silentium Private Limited",
   "license": "MIT",
   "dependencies": {
