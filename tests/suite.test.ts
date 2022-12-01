@@ -17,11 +17,17 @@ describe("basic cli should work", async () => {
 
 describe("configuration", async () => {
   test.each([
-    { command: `-e inspect`, opts: {cwd: './suites/config' }, result: expect.objectContaining({ body: { config: { TEST: 'hello' } } })},
-    { command: `-e inspect -p ./preset.ts`, opts: {cwd: './suites/config' }, result: expect.objectContaining({ body: { config: { TEST: 'hello' } } })},
+    { command: `-e inspect`, opts: {cwd: './suites/config' }, result: expect.objectContaining({ test: 'hello', more: { test: 'hello' } } )},
+    { command: `-e inspect -p ./preset.ts`, opts: {cwd: './suites/config' }, result: expect.objectContaining({ test: 'test' })},
   ])(`${chalk.green("subsystem $command")} to match $result`, async ({command, opts, result}) => {
     const {stdout, failed, stderr, exitCode} = await execaCommand(`yarn subsystem ${command}`, opts)
 
-    console.log('>>>', stdout)
+    if (failed) {
+      expect(stderr).toBeNull()
+    }
+    const out = JSON.parse(stdout)
+    
+    expect(out.code).toBe(200)
+    expect(out.body.config).toEqual(result)
   })
 })
