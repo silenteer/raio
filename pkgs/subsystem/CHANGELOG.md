@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/silenteer/raio/compare/v1.1.0...v1.2.0) (2022-12-01)
+
+
+### Features
+
+* add resolvers and dependencies for handles ([7587d36](https://github.com/silenteer/raio/commit/7587d361b33a15650dbd608d4efb7af7da6520e7))
+
 ## 1.1.0 (2022-11-30)
 
 
