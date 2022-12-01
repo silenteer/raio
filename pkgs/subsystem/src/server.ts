@@ -11,7 +11,7 @@ import path from "path"
 import { createRouter } from "radix3"
 import { inspect } from "util"
 import { z } from "zod"
-import { CallContext, ConfigFn, ContextFn, define, Handler, logger, subsystem, Router } from "."
+import { CallContext, ConfigFn, ContextFn, define, Handler, logger, Subsystem, Router } from "."
 import { createChildSpan, instrument } from "./instrument"
 import { init } from "./tracing"
 import { merge } from "./utils"
@@ -199,7 +199,7 @@ async function startServer(serverConfig: ServerConfig) {
     
     init({ appName: name, appVersion: 'dev' })
 
-    let subsystem: subsystem = {
+    let subsystem: Subsystem = {
       config,
       context: {},
       routes: [],
